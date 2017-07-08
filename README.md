@@ -2,6 +2,7 @@
 
 ## available functions:
 
+```python
 general
 run_bash(command, stdin=None, logging=False):
 
@@ -40,4 +41,4 @@ run_slurm(command, remote_host, remote_dir, name="name", time_minutes="600", mem
 xvg
 plot(filename)
 load(filename)
-
+```
