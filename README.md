@@ -4,7 +4,8 @@
 
 ### general
 ```python
-run_bash(command, stdin=None, logging=False):
+def run_bash(command, stdin=None, logging=False)
+class WorkingDir()
 ```
 
 ### gro
