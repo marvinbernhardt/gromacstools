@@ -147,22 +147,44 @@ def translate_with_pbc(gro_file, vector, out_file="conf-shifted.gro"):
     run_bash("rm conf-temp-trans.gro")
 
 
-def generate_ffc_crystal_atomic(file, natoms, boxlength, mol_name, atom_name):
-    """generate a face centerd cubic atomic crystal .gro file"""
+def generate_ffc_crystal_atomic(filename, n_atoms, box_length, mol_name, atom_name):
+    """generates a face-centerd-cubic crystal of single atoms.
 
-    if natoms != (5 * 5 * 5) * 4:
-        raise ValueError('works for 500 atoms only at the moment')
+Works only if natoms/4 is a cubic number.
+
+Parameters
+----------
+filename : string
+    Name of output file.
+n_atoms: int
+    Number of atoms.
+box_length: scalar
+    Length of the cubic box
+mol_name: string
+    Name of moltype (max. length 5)
+atom_name: string
+    Name of atoms (max. length 5)
+"""
+
+    def is_perfect_cube(number):
+        return number in (x**3 for x in range(20))
+
+    if not n_atoms % 4 == 0:
+        raise ValueError("number of atoms not divisible by 4 (number of points in fcc unit cell)")
+    if not is_perfect_cube(n_atoms // 4):
+        raise ValueError(f"number of atoms divided by 4 ({n_atoms // 4}) is not a cubic number")
 
     lattice_points=[(0., 0., 0.), (0., .5, .5), (.5, 0., .5), (.5, .5, 0.)]
-    a = b = c = boxlength/5
+    nx = round((n_atoms // 4)**(1/3))
+    a = b = c = box_length / nx
 
-    with open(file, 'w') as f:
+    with open(filename, 'w') as f:
         atom_nr = 1
         f.write("argon\n")
-        f.write("  {}\n".format(natoms))
-        for x in np.linspace(0., boxlength, num=5, endpoint=False):
-            for y in np.linspace(0., boxlength, num=5, endpoint=False):
-                for z in np.linspace(0., boxlength, num=5, endpoint=False):
+        f.write("  {}\n".format(n_atoms))
+        for x in np.linspace(0., box_length, num=nx, endpoint=False):
+            for y in np.linspace(0., box_length, num=nx, endpoint=False):
+                for z in np.linspace(0., box_length, num=nx, endpoint=False):
                     for lattice_point in lattice_points:
                         xpos = x + lattice_point[0] * a
                         ypos = y + lattice_point[1] * b
@@ -170,7 +192,7 @@ def generate_ffc_crystal_atomic(file, natoms, boxlength, mol_name, atom_name):
                         f.write("{0: 5d}{1:>5s}{2:>5s}{0: 5d}{3:8.3f}{4:8.3f}{5:8.3f}\n".format(atom_nr, mol_name, atom_name, xpos, ypos, zpos))
                         atom_nr += 1
 
-        f.write(" {0:10.5f}{0:10.5f}{0:10.5f}\n".format(boxlength))
+        f.write(" {0:10.5f}{0:10.5f}{0:10.5f}\n".format(box_length))
 
 
 def generate_ffc_crystal_water(filename, n_mols, box_length):
