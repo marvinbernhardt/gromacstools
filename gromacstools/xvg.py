@@ -78,7 +78,10 @@ def load(filename):
                 pure_data.write(line.strip() + "\n")
 
     # header post-processing
-    header['legend'][0] = header['xlabel']
+    try:
+        header['legend'][0] = header['xlabel']
+    except:
+        header['legend'][0] = ''
 
     pure_data.seek(0)
     dataFrame = pd.read_csv(pure_data, delim_whitespace=True, header=None)

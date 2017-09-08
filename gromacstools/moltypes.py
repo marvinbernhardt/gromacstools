@@ -1,10 +1,9 @@
 import numpy as np
 from copy import deepcopy
 
-
 def generate_parameters_file(moltypes, nsamples, nblocks, nblocksteps, parameters_file="params.txt"):
     """
-    Generate a parameters file for my 2PT code. Reads moltypes and a mpd_file.
+    Generate a parameters file for my 2PT code.
     """
 
     moltypes = deepcopy(moltypes)
@@ -57,6 +56,8 @@ def generate_parameters_file(moltypes, nsamples, nblocks, nblocksteps, parameter
         fwrite(' '.join(map(str, [mol['mass'] for mol in mols])))
         fwrite(' '.join(map(str, [mol['moltypenr'] for mol in mols])))
         fwrite(' '.join(map(str, [atom['mass'] for atom in atoms])))
+
+    return moltypes
 
 
 def shrink_box_remove_mols(moltypes, box_center, box_vectors, padding):
