@@ -81,9 +81,14 @@ def load(filename):
     try:
         header['legend'][0] = header['xlabel']
     except:
-        header['legend'][0] = ''
+        pass
 
     pure_data.seek(0)
     dataFrame = pd.read_csv(pure_data, delim_whitespace=True, header=None)
-    dataFrame.columns = header['legend']
+
+    try:
+        dataFrame.columns = header['legend']
+    except:
+        pass
+
     return dataFrame, header
