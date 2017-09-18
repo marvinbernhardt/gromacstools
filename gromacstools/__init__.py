@@ -4,4 +4,5 @@ from . import mdp
 from . import mol
 from . import moltypes
 from . import remote
+from . import top
 from . import xvg
