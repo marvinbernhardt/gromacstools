@@ -244,10 +244,10 @@ positions and velocities."""
             for moltype in self.moltypes():
                 for mol in moltype.mols():
                     for atom in mol.atoms():
-                        f.write(f"{mol.index_in_top:>5}")
+                        f.write(f"{mol.index_in_top + 1:>5}")
                         f.write(f"{mol.name:>5}")
                         f.write(f"{atom.name:>5}")
-                        f.write(f"{atom.index_in_top:>5}")
+                        f.write(f"{atom.index_in_top + 1:>5}")
                         try:
                             f.write(f"{atom.pos[0]:> 8.3f}")
                             f.write(f"{atom.pos[1]:> 8.3f}")
