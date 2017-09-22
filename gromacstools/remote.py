@@ -38,8 +38,6 @@ def run_slurm_array(command, remote_host, remote_dir, array_start, array_end, ar
 #SBATCH --job-name={name}
 #SBATCH --array={array_start}-{array_end}:{array_step}
 #SBATCH --mail-type=NONE
-#SBATCH --error=%A_%a.e
-#SBATCH --output=%A_%a.o
 #SBATCH --ntasks=1
 #SBATCH --exclusive
 #SBATCH --mem-per-cpu={mem_per_cpu}
@@ -83,8 +81,6 @@ def run_slurm(command, remote_host, remote_dir, name="name", time_minutes="600",
     sbatch_script = f"""#!/bin/bash
 #SBATCH --job-name={name}
 #SBATCH --mail-type=NONE
-#SBATCH --error=%j.e
-#SBATCH --output=%j.o
 #SBATCH --ntasks=1
 #SBATCH --exclusive
 #SBATCH --mem-per-cpu={mem_per_cpu}
