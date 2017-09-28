@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 
 
 class Atom:
@@ -140,14 +141,14 @@ class Topology:
         """not implemented yes"""
         pass
 
-    def load_simple_top(self, simple_top):
+    def load_simple_top(self, simple_top, atomtypes):
         """Loads a simple topology (moltypes with nmols) and converts
 it to a distinctive topology."""
-        self.distinctive_top = simple_top.copy()
+        self.distinctive_top = deepcopy(simple_top)
 
         # expand nmols to mols
         for dt_moltype in self.distinctive_top:
-            mol = {'atoms': dt_moltype['atomtypes']}
+            mol = {'atoms': [atomtypes[atomtype] for atomtype in dt_moltype['atomtypes']]}
             mols = [mol for molnr in range(dt_moltype['nmols'])]
             dt_moltype['mols'] = mols
             del dt_moltype['nmols']
@@ -311,3 +312,4 @@ def com_atomlist(atomlist):
 def move_atomlist(atomlist, vector):
     for atom in atomlist:
         atom.pos += vector
+
