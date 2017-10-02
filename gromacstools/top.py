@@ -141,18 +141,17 @@ class Topology:
         """not implemented yes"""
         pass
 
-    def load_simple_top(self, simple_top, atomtypes):
+    def load_simple_top(self, simple_top):
         """Loads a simple topology (moltypes with nmols) and converts
 it to a distinctive topology."""
         self.distinctive_top = deepcopy(simple_top)
 
         # expand nmols to mols
         for dt_moltype in self.distinctive_top:
-            mol = {'atoms': [atomtypes[atomtype] for atomtype in dt_moltype['atomtypes']]}
-            mols = [mol for molnr in range(dt_moltype['nmols'])]
-            dt_moltype['mols'] = mols
+            mol = {'atoms': dt_moltype['atoms']}
+            dt_moltype['mols'] = [mol for molnr in range(dt_moltype['nmols'])]
             del dt_moltype['nmols']
-            del dt_moltype['atomtypes']
+            del dt_moltype['atoms']
 
     def load_gro_file(self, gro_filename, atom_mass_dict, abc_indicators_dict,
                       sigma_dict):
