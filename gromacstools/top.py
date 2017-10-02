@@ -52,6 +52,7 @@ class Moltype:
         self.name = dt_moltype['name']
         self.dt_mols = dt_moltype['mols']
         self.abc_indicators = dt_moltype['abc_indicators']
+        self.sigma = dt_moltype['sigma']
         self.nmols = len(self.dt_mols)
         self.natomtypes = len(self.atomtypes())
         self.natoms = self.nmols * self.natomtypes
@@ -60,6 +61,12 @@ class Moltype:
         self.index_in_top = index_in_top
         self.firstmol = firstmol
         self.firstatom = firstatom
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
 
     def mols(self):
         """Return list of Molecule objects in this molecule type."""
