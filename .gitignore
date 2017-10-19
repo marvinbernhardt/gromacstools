@@ -1,3 +1,4 @@
 /archive
 /tests
 __pycache__
+*.pyc

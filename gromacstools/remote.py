@@ -113,3 +113,54 @@ echo -n "finished $SLURM_JOB_ID at "; date
             return None
     else:
         return None
+
+
+def run_pbs(command, remote_host, remote_dir, name="name",
+            walltime="01:00:00", queue='chickencurry',
+            nodes=1, dry_run=False):
+    """Runs a pbs job on a remote host."""
+    if queue == "chickencurry":
+        nodes_ppn_line = "#PBS -l nodes=1:ppn=24"
+    elif queue == "pizza":
+        nodes = nodes * 24  # hack since enzo names cores nodes in this case
+        nodes_ppn_line = f"#PBS -l nodes={nodes}"
+    else:
+        raise KeyError(f"unknown queue {queue}")
+    qsub_script = f"""#!/bin/bash
+#PBS -j oe
+#PBS -q {queue}
+#PBS -l walltime={walltime}
+{nodes_ppn_line}
+#PBS -N {name}
+
+if [ -n "$PBS_O_WORKDIR" ]; then
+    cd $PBS_O_WORKDIR
+fi
+
+echo -n "started $PBS_JOBID at "; date
+echo -n "running on "; hostname
+
+shopt -s expand_aliases
+source $HOME/.bash_profile
+
+{command}
+
+echo -n "finished $PBS_JOBID at "; date
+"""
+    # write and copy to remote
+    with open("qsub.sh", 'w') as f:
+        f.write(qsub_script)
+    run_bash(f"rsync -az qsub.sh {remote_host}:{remote_dir}/", logging=False)
+
+    # run qsub on remote and remote jobid
+    if not dry_run:
+        proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"source /etc/profile; cd {remote_dir}; qsub pbs.sh"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        stderr_string = stderr.decode().rstrip()
+        jobid = stderr_string.split('.')[0]
+        if jobid.isdigit():
+            return stderr_string
+        else:
+            return None
+    else:
+        return None
