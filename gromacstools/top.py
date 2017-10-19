@@ -51,6 +51,7 @@ class Moltype:
     def __init__(self, dt_moltype, index_in_top, firstmol, firstatom):
         self.name = dt_moltype['name']
         self.dt_mols = dt_moltype['mols']
+        self.rot_treat = dt_moltype['rot_treat']
         self.abc_indicators = dt_moltype['abc_indicators']
         self.sigma = dt_moltype['sigma']
         self.nmols = len(self.dt_mols)
@@ -160,8 +161,8 @@ it to a distinctive topology."""
             del dt_moltype['nmols']
             del dt_moltype['atoms']
 
-    def load_gro_file(self, gro_filename, atom_mass_dict, abc_indicators_dict,
-                      sigma_dict):
+    def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
+                      abc_indicators_dict, sigma_dict):
         """Loads a gro file into a distinctive topology with
 positions and velocities."""
         atoms = []
@@ -216,6 +217,7 @@ positions and velocities."""
                 mol_name = atom['mol_name']
                 dt_moltype = {'name': mol_name,
                               'mols': dt_mols,
+                              'rot_treat': rot_treat_dict[mol_name],
                               'abc_indicators': abc_indicators_dict[mol_name],
                               'sigma': sigma_dict[mol_name]}
                 dt_moltypes.append(dt_moltype)
@@ -235,6 +237,7 @@ positions and velocities."""
                 mol_name = atom['mol_name']
                 dt_moltype = {'name': mol_name,
                               'mols': dt_mols,
+                              'rot_treat': rot_treat_dict[mol_name],
                               'abc_indicators': abc_indicators_dict[mol_name],
                               'sigma': sigma_dict[mol_name]}
                 dt_moltypes.append(dt_moltype)
@@ -296,6 +299,7 @@ positions and velocities."""
             fwrite_list([moltype.firstatom for moltype in self.moltypes()])
             fwrite_list([moltype.nmols for moltype in self.moltypes()])
             fwrite_list([moltype.natomtypes for moltype in self.moltypes()])
+            fwrite_list([moltype.rot_treat for moltype in self.moltypes()])
             fwrite_list([' '.join(map(str, moltype.abc_indicators))
                          for moltype in self.moltypes()])
             fwrite_list([mol.firstatom for mol in self.mols()])
