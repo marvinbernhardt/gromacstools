@@ -154,12 +154,12 @@ echo -n "finished $PBS_JOBID at "; date
 
     # run qsub on remote and remote jobid
     if not dry_run:
-        proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"source /etc/profile; cd {remote_dir}; qsub pbs.sh"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"source /etc/profile; cd {remote_dir}; qsub qsub.sh"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         stdout, stderr = proc.communicate()
-        stderr_string = stderr.decode().rstrip()
-        jobid = stderr_string.split('.')[0]
+        stdout_string = stdout.decode().rstrip()
+        jobid = stdout_string.split('.')[0]
         if jobid.isdigit():
-            return stderr_string
+            return jobid
         else:
             return None
     else:
