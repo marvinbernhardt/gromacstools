@@ -1,6 +1,7 @@
 import numpy as np
 from MDAnalysis.lib.formats.libmdaxdr import TRRFile
 
+
 def read_series(trr_filename, n_frames, readx=True, readv=False, readf=False):
     """Reads a trr trajectory. Returns a dictionary with positions,
 velocities, boxes, steps, times, lambdas; all as series (last
@@ -31,7 +32,7 @@ array dimension is the frame number)."""
     # read n_frames frames
     with TRRFile(trr_filename, 'r') as trr_file:
         for frame_nr, frame in enumerate(trr_file):
-            boxes[:,:,frame_nr] = frame.box
+            boxes[:, :, frame_nr] = frame.box
             times[frame_nr] = frame.time
             steps[frame_nr] = frame.step
             lambdas[frame_nr] = frame.lmbda
@@ -46,11 +47,14 @@ array dimension is the frame number)."""
                 break
         # check if more frames read than available
         else:
-            raise ValueError(f"n_frames is {n_frames} which is higher than the number of frames in {trr_filename}, which is {frame_nr+1}")
+            raise ValueError(f"n_frames ({n_frames}) is higher than the number of frames in {trr_filename} ({frame_nr+1})")
 
-        series_dict = {'positions': positions, 'velocities': velocities, 'forces': forces, 'boxes': boxes, 'steps': steps, 'times': times, 'lambdas': lambdas}
+        series_dict = {'positions': positions, 'velocities': velocities,
+                       'forces': forces, 'boxes': boxes, 'steps': steps,
+                       'times': times, 'lambdas': lambdas}
 
         return series_dict
+
 
 def write_series(trr_filename, series_dict):
     """Writes a trr trajectory. Takes a series dictionary
@@ -69,7 +73,7 @@ similar to what read_series returns."""
             positions = reshape_if_not_none(series_dict['positions'], frame_nr)
             velocities = reshape_if_not_none(series_dict['velocities'], frame_nr)
             forces = reshape_if_not_none(series_dict['forces'], frame_nr)
-            box = series_dict['boxes'][:,:,frame_nr]
+            box = series_dict['boxes'][:, :, frame_nr]
             step = series_dict['steps'][frame_nr]
             time = series_dict['times'][frame_nr]
             lmbda = series_dict['lambdas'][frame_nr]
