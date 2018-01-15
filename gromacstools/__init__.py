@@ -1,5 +1,6 @@
 from . import general
 from . import gro
+from . import itp
 from . import mdp
 from . import mol
 from . import moltypes
