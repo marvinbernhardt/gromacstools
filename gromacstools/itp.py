@@ -14,8 +14,13 @@ def get_bonds(itp_file):
     config.optionxform = str
     config.read(itp_file)
 
+    try:
+        bonds_keys = config[' bonds '].keys()
+    except KeyError:
+        bonds_keys = []
+
     bonds = set()
-    for line in config[' bonds '].keys():
+    for line in bonds_keys:
         # bond is a set of {atom0, atom1}
         bond = frozenset(map(int, line.strip().split()[0:2]))
         bonds.add(bond)
@@ -29,8 +34,13 @@ def get_pairs(itp_file):
     config.optionxform = str
     config.read(itp_file)
 
+    try:
+        pairs_keys = config[' pairs '].keys()
+    except KeyError:
+        pairs_keys = []
+
     pairs = set()
-    for line in config[' pairs '].keys():
+    for line in pairs_keys:
         # pair is a set of {atom0, atom1}
         pair = frozenset(map(int, line.strip().split()[0:2]))
         pairs.add(pair)
@@ -44,8 +54,13 @@ def get_angles(itp_file):
     config.optionxform = str
     config.read(itp_file)
 
+    try:
+        angles_keys = config[' angles '].keys()
+    except KeyError:
+        angles_keys = []
+
     angles = set()
-    for line in config[' angles '].keys():
+    for line in angles_keys:
         atoms = list(map(int, line.strip().split()[0:3]))
         # angle is an tuple of (middle_atom, set of {outer_atom1, outer_atom2})
         angle = (atoms[1], frozenset({atoms[0], atoms[2]}))
@@ -60,8 +75,13 @@ def get_dihedrals(itp_file):
     config.optionxform = str
     config.read(itp_file)
 
+    try:
+        dihedrals_keys = config[' diheadrals '].keys()
+    except KeyError:
+        dihedrals_keys = []
+
     dihedrals = set()
-    for line in config[' dihedrals '].keys():
+    for line in dihedrals_keys:
         atoms = list(map(int, line.strip().split()[0:4]))
         # dihedral is a set of {tuple of (inner_atom, outer_atom), tuple of (inner_atom, outer_atom)}
         dihedral = frozenset({(atoms[1], atoms[0]), (atoms[2], atoms[3])})
