@@ -1,14 +1,7 @@
+import fileinput
 import numpy as np
-import fileinput, sys
+import sys
 from .general import run_bash
-
-def get_box(gro_file):
-    """returns the box vector from a .gro file"""
-    with open(gro_file, 'r') as file:
-        for line in file:
-            pass
-        box = list(map(float, line.split()))
-    return np.array(box)
 
 
 def get_natoms(gro_file):
@@ -19,6 +12,24 @@ def get_natoms(gro_file):
                 natoms = int(line.strip())
                 break
     return natoms
+
+
+def get_box(gro_file):
+    """returns the box vector from a .gro file"""
+    natoms = get_natoms(gro_file)
+    with open(gro_file, 'r') as file:
+        for line_nr, line in enumerate(file):
+            if line_nr == natoms + 2:
+                box = list(map(float, line.split()))
+    return np.array(box)
+
+
+def set_box(gro_file, box_length):
+    natoms = get_natoms(gro_file)
+    for line_nr, line in enumerate(fileinput.input(gro_file, inplace=True)):
+        if line_nr == natoms + 2:
+            line = f"{box_length} {box_length} {box_length}\n"
+        sys.stdout.write(line)
 
 
 def mix_water(gro_file, nmols):
@@ -117,7 +128,6 @@ def set_atomname(gro_file, atomlist, atomname):
 
 def set_coordinate(gro_file, atom, coord, value):
     """modifies the coordinate of atom to have value"""
-    import fileinput, sys
     for i, line in enumerate(fileinput.input(gro_file, inplace=True)):
         if i == atom + 2:
             first_char = 20 + 8 * coord
@@ -131,7 +141,6 @@ def set_molname(gro_file, atomlist, molname):
     """set molecule name of atoms in atomlist to be molname"""
     if len(molname) > 5:
             raise Exception("molname has {} characters, but can only have 5".format(len(molname)))
-    import fileinput, sys
     for i, line in enumerate(fileinput.input(gro_file, inplace=True)):
         if i - 2 in atomlist:
             line = line[0:5] + "{:<5}".format(molname) + line[10:]
