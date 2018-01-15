@@ -76,7 +76,7 @@ def get_dihedrals(itp_file):
     config.read(itp_file)
 
     try:
-        dihedrals_keys = config[' diheadrals '].keys()
+        dihedrals_keys = config[' dihedrals '].keys()
     except KeyError:
         dihedrals_keys = []
 
