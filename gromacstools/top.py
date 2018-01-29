@@ -185,7 +185,7 @@ positions and velocities."""
                         atom['vel'] = np.array([float(line[44:52]),
                                                 float(line[52:60]),
                                                 float(line[60:68])])
-                    except:
+                    except IndexError:
                         atom['vel'] = np.full(3, np.nan)
 
                     atoms.append(atom)
@@ -262,7 +262,7 @@ positions and velocities."""
                             f.write(f"{atom.pos[0]:> 8.3f}")
                             f.write(f"{atom.pos[1]:> 8.3f}")
                             f.write(f"{atom.pos[2]:> 8.3f}")
-                        except:
+                        except IndexError:
                             raise KeyError("""There are no positions in this
                                            topology. Not possible to write
                                            gro file!""")
@@ -270,43 +270,32 @@ positions and velocities."""
                             f.write(f"{atom.vel[0]:> 8.4f}")
                             f.write(f"{atom.vel[1]:> 8.4f}")
                             f.write(f"{atom.vel[2]:> 8.4f}")
-                        except:
+                        except IndexError:
                             pass
                         f.write("\n")
             f.write(f"{box[0]} {box[1]} {box[2]}\n")
 
-    def save_2pt_parameters_file(self, nsamples, nblocks, nblocksteps,
-                                 parameters_file="params.txt"):
+    def save_doscalc_parameters_file(self, nsamples, nblocks, nblocksteps,
+                                     parameters_file="params.txt"):
         """
-        Generate a parameters file for my 2PT code.
+        Generate a parameters file for my dos-calc code.
         """
-
-        def fwrite_int(number):
-            f.write(str(number) + "\n")
-
-        def fwrite_list(_list):
-            f.write(' '.join(map(str, _list)) + "\n")
 
         with open(parameters_file, 'w') as f:
 
-            fwrite_int(nsamples)
-            fwrite_int(nblocks)
-            fwrite_int(nblocksteps)
-            fwrite_int(self.natoms())
-            fwrite_int(self.nmols())
-            fwrite_int(self.nmoltypes())
-            fwrite_list([moltype.firstmol for moltype in self.moltypes()])
-            fwrite_list([moltype.firstatom for moltype in self.moltypes()])
-            fwrite_list([moltype.nmols for moltype in self.moltypes()])
-            fwrite_list([moltype.natomtypes for moltype in self.moltypes()])
-            fwrite_list([moltype.rot_treat for moltype in self.moltypes()])
-            fwrite_list([' '.join(map(str, moltype.abc_indicators))
-                         for moltype in self.moltypes()])
-            fwrite_list([mol.firstatom for mol in self.mols()])
-            fwrite_list([mol.natoms for mol in self.mols()])
-            fwrite_list([mol.mass for mol in self.mols()])
-            fwrite_list([mol.moltype_nr for mol in self.mols()])
-            fwrite_list([atom.mass for atom in self.atoms()])
+            f.write(str(nsamples) + "\n")
+            f.write(str(nblocks) + "\n")
+            f.write(str(nblocksteps) + "\n")
+            f.write(str(self.nmoltypes()) + "\n")
+            for moltype in self.moltypes():
+                moltype_atommasses = (atomtype['mass'] for atomtype in moltype.atomtypes())
+                moltype_string = f"{moltype.nmols} "\
+                                 f"{moltype.natomtypes} "\
+                                 f"{' '.join(map(str, moltype_atommasses))} "\
+                                 f"{moltype.rot_treat} "\
+                                 f"{' '.join(map(str, moltype.abc_indicators))} "
+
+                f.write(moltype_string + '\n')
 
 
 def com_atomlist(atomlist):
