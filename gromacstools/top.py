@@ -293,7 +293,7 @@ positions and velocities."""
                                  f"{moltype.natomtypes} "\
                                  f"{' '.join(map(str, moltype_atommasses))} "\
                                  f"{moltype.rot_treat} "\
-                                 f"{' '.join(map(str, moltype.abc_indicators))} "
+                                 f"{' '.join(map(str, moltype.abc_indicators))}"
 
                 f.write(moltype_string + '\n')
 
