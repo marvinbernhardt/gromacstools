@@ -1,6 +1,6 @@
-import numpy as np
 from copy import deepcopy
-
+import numpy as np
+from scipy import linalg
 
 class Atom:
     """Atom class. Can contain positions and velocities.
@@ -360,3 +360,63 @@ def move_atomlist(atomlist, vector):
     for atom in atomlist:
         atom.pos += vector
 
+
+def decompose_velocities_of_molecule(molecule):
+    """decompose the velocity of a molecule into translation,
+    rotation and vibration parts."""
+
+    positions = np.array([atom.pos for atom in molecule.atoms()])
+    velocities = np.array([atom.vel for atom in molecule.atoms()])
+    m_atommasses = np.array([atom.mass for atom in molecule.atoms()])
+
+    if molecule.natoms == 1:
+        return velocities, np.zeros((1, 3)), np.zeros((1, 3))
+
+    center_of_mass = m_atommasses @ positions / molecule.mass
+    mol_velocity_trn = m_atommasses @ velocities / molecule.mass
+    velocities_trn = np.repeat([mol_velocity_trn], molecule.natoms, axis=0)
+    positions_rel = positions - center_of_mass
+
+    angular_momentum = m_atommasses @ np.cross(positions_rel, velocities)
+
+    moi_tensor = np.zeros((3, 3))
+    for i in range(len(positions_rel)):
+        moi_tensor += m_atommasses[i] * ((positions_rel[i] @ positions_rel[i]) * np.identity(3)
+                                         - np.tensordot(positions_rel[i], positions_rel[i], axes=0))
+
+    if molecule.natoms == 2:
+        raise Exception("linear molecules not implemented")
+    else:
+        angular_velocity = linalg.solve(moi_tensor, angular_momentum)
+
+    velocities_rot = np.cross(angular_velocity, positions_rel)
+    velocities_vib = velocities - velocities_trn - velocities_rot
+
+    return velocities_trn, velocities_rot, velocities_vib
+
+def show_kinetic_energy_distribution(topology, kT):
+    e_kin_trn = 0
+    e_kin_rot = 0
+    e_kin_vib = 0
+    e_kin_tot = 0
+
+    for mol in topology.mols():
+        vel_trn, vel_rot, vel_vib = decompose_velocities_of_molecule(mol)
+        vel_tot = vel_trn + vel_rot + vel_vib
+        m_atommasses = np.array([atom.mass for atom in mol.atoms()])
+
+        e_kin_trn += np.sum(m_atommasses @ vel_trn**2)
+        e_kin_rot += np.sum(m_atommasses @ vel_rot**2)
+        e_kin_vib += np.sum(m_atommasses @ vel_vib**2)
+        e_kin_tot += np.sum(m_atommasses @ vel_tot**2)
+
+    e_kin_trn /= topology.nmols() * kT
+    e_kin_rot /= topology.nmols() * kT
+    e_kin_vib /= topology.nmols() * kT
+    e_kin_tot /= topology.nmols() * kT
+
+    print(f"""kinetic energy distribution:
+trn: {e_kin_trn:7.4f}
+rot: {e_kin_rot:7.4f}
+vib: {e_kin_vib:7.4f}
+tot: {e_kin_tot:7.4f}""")
