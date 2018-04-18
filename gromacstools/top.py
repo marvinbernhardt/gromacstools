@@ -3,28 +3,40 @@ from copy import deepcopy
 
 
 class Atom:
-    """Atom class. Can contain positions and velocities."""
+    """Atom class. Can contain positions and velocities.
+    Modifications to objects ['name', 'mass', 'pos', 'vel'] will also modify
+    the distinctive topology (__setattr__ method is altered)."""
 
     def __init__(self, dt_atom, index_in_top, index_in_moltype, index_in_mol):
-        self.name = dt_atom['name']
-        self.mass = dt_atom['mass']
+        self.dt_atom = dt_atom
+        self.__dict__['name'] = dt_atom['name']
+        self.__dict__['mass'] = dt_atom['mass']
         self.index_in_top = index_in_top
         self.index_in_moltype = index_in_moltype
         self.index_in_mol = index_in_mol
         try:
-            self.pos = dt_atom['pos']
+            self.__dict__['pos'] = dt_atom['pos']
         except:
             pass
         try:
-            self.vel = dt_atom['vel']
+            self.__dict__['vel'] = dt_atom['vel']
         except:
             pass
 
+    def __setattr__(self, attribute, value):
+        """additionally modify dt_atom in the distinctive topology"""
+        if attribute in ['name', 'mass', 'pos', 'vel']:
+            self.dt_atom[attribute] = value
+        self.__dict__[attribute] = value
 
 class Molecule:
-    """Molecule class. Contains atoms() function."""
+    """Molecule class. Contains atoms() function.
+    It is not possible to chainge it's name (that comes from the moltype)
+    nor its atoms (not implemented)."""
+
     def __init__(self, dt_mol, name, index_in_top, index_in_moltype,
                  firstatom, moltype_nr):
+        self.dt_mol = dt_mol
         self.name = name
         self.dt_atoms = dt_mol['atoms']
         self.mass = sum([dt_atom['mass'] for dt_atom in self.dt_atoms])
@@ -47,13 +59,17 @@ class Molecule:
 
 
 class Moltype:
-    """Moltype class. Contains mols() and atoms() function."""
+    """Moltype class. Contains mols() and atoms() function.
+    Modifications to objects ['name', 'rot_treat', 'abc_indicators', 'sigma'] will also modify
+    the distinctive topology (__setattr__ method is altered)."""
+
     def __init__(self, dt_moltype, index_in_top, firstmol, firstatom):
-        self.name = dt_moltype['name']
+        self.dt_moltype = dt_moltype
+        self.__dict__['name'] = dt_moltype['name']
         self.dt_mols = dt_moltype['mols']
-        self.rot_treat = dt_moltype['rot_treat']
-        self.abc_indicators = dt_moltype['abc_indicators']
-        self.sigma = dt_moltype['sigma']
+        self.__dict__['rot_treat'] = dt_moltype['rot_treat']
+        self.__dict__['abc_indicators'] = dt_moltype['abc_indicators']
+        self.__dict__['sigma'] = dt_moltype['sigma']
         self.nmols = len(self.dt_mols)
         self.natomtypes = len(self.atomtypes())
         self.natoms = self.nmols * self.natomtypes
@@ -62,6 +78,12 @@ class Moltype:
         self.index_in_top = index_in_top
         self.firstmol = firstmol
         self.firstatom = firstatom
+
+    def __setattr__(self, attribute, value):
+        """additionally modify dt_moltype in the distinctive topology"""
+        if attribute in ['name', 'rot_treat', 'abc_indicators', 'sigma']:
+            self.dt_moltype[attribute] = value
+        self.__dict__[attribute] = value
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -160,6 +182,33 @@ it to a distinctive topology."""
             dt_moltype['mols'] = [mol for molnr in range(dt_moltype['nmols'])]
             del dt_moltype['nmols']
             del dt_moltype['atoms']
+
+    def load_gro_file_pos_vel(self, gro_filename):
+        """Loads a positions and velocities from a gro file into an
+        existing distinctive topology."""
+
+        assert(hasattr(self, distinctive_top))
+
+        atoms = self.atoms()
+        with open(gro_filename, 'r') as f:
+            for i, line in enumerate(f):
+                if i == 0:
+                    pass
+                elif i == 1:
+                    pass
+                elif i < self.natoms() + 2:
+                    atom = atoms[i - 2]
+                    atom['pos'] = np.array([float(line[20:28]),
+                                            float(line[28:36]),
+                                            float(line[36:44])])
+                    # try to read velocities if present in file
+                    try:
+                        atom['vel'] = np.array([float(line[44:52]),
+                                                float(line[52:60]),
+                                                float(line[60:68])])
+                    except IndexError:
+                        atom['vel'] = np.full(3, np.nan)
+
 
     def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
                       abc_indicators_dict, sigma_dict):
