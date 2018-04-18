@@ -65,6 +65,7 @@ echo -n "running on "; hostname
 shopt -s expand_aliases
 source $HOME/.bash_profile
 mkdir -p $HPC_LOCAL
+set -euo pipefail
 
 {command}
 
@@ -108,6 +109,7 @@ echo -n "running on "; hostname
 shopt -s expand_aliases
 source $HOME/.bash_profile
 mkdir -p $HPC_LOCAL
+set -euo pipefail
 
 {command}
 
@@ -158,6 +160,7 @@ echo -n "running on "; hostname
 
 shopt -s expand_aliases
 source $HOME/.bash_profile
+set -euo pipefail
 
 {command}
 
