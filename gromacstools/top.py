@@ -8,7 +8,7 @@ class Atom:
     the distinctive topology (__setattr__ method is altered)."""
 
     def __init__(self, dt_atom, index_in_top, index_in_moltype, index_in_mol):
-        self.dt_atom = dt_atom
+        self.__dt_atom = dt_atom
         self.__dict__['name'] = dt_atom['name']
         self.__dict__['mass'] = dt_atom['mass']
         self.index_in_top = index_in_top
@@ -26,7 +26,7 @@ class Atom:
     def __setattr__(self, attribute, value):
         """additionally modify dt_atom in the distinctive topology"""
         if attribute in ['name', 'mass', 'pos', 'vel']:
-            self.dt_atom[attribute] = value
+            self.__dt_atom[attribute] = value
         self.__dict__[attribute] = value
 
 class Molecule:
@@ -36,11 +36,10 @@ class Molecule:
 
     def __init__(self, dt_mol, name, index_in_top, index_in_moltype,
                  firstatom, moltype_nr):
-        self.dt_mol = dt_mol
         self.name = name
-        self.dt_atoms = dt_mol['atoms']
-        self.mass = sum([dt_atom['mass'] for dt_atom in self.dt_atoms])
-        self.natoms = len(self.dt_atoms)
+        self.__dt_atoms = dt_mol['atoms']
+        self.mass = sum([dt_atom['mass'] for dt_atom in self.__dt_atoms])
+        self.natoms = len(self.__dt_atoms)
         self.index_in_top = index_in_top
         self.index_in_moltype = index_in_moltype
         self.firstatom = firstatom
@@ -49,7 +48,7 @@ class Molecule:
     def atoms(self):
         """Return list of Atom objects in this Molecule."""
         atoms = []
-        for index_in_mol, dt_atom in enumerate(self.dt_atoms):
+        for index_in_mol, dt_atom in enumerate(self.__dt_atoms):
             index_in_moltype = (self.index_in_moltype * self.natoms
                                 + index_in_mol)
             index_in_top = self.firstatom + index_in_mol
@@ -64,7 +63,7 @@ class Moltype:
     the distinctive topology (__setattr__ method is altered)."""
 
     def __init__(self, dt_moltype, index_in_top, firstmol, firstatom):
-        self.dt_moltype = dt_moltype
+        self.__dt_moltype = dt_moltype
         self.__dict__['name'] = dt_moltype['name']
         self.dt_mols = dt_moltype['mols']
         self.__dict__['rot_treat'] = dt_moltype['rot_treat']
@@ -82,7 +81,7 @@ class Moltype:
     def __setattr__(self, attribute, value):
         """additionally modify dt_moltype in the distinctive topology"""
         if attribute in ['name', 'rot_treat', 'abc_indicators', 'sigma']:
-            self.dt_moltype[attribute] = value
+            self.__dt_moltype[attribute] = value
         self.__dict__[attribute] = value
 
     def __getitem__(self, key):
