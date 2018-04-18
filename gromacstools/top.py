@@ -26,7 +26,6 @@ class Atom:
     def __setattr__(self, attribute, value):
         """additionally modify dt_atom in the distinctive topology"""
         if attribute in ['name', 'mass', 'pos', 'vel']:
-            #print(f"setting {attribute} to {value}")
             self.dt_atom[attribute] = value
         self.__dict__[attribute] = value
 
@@ -198,9 +197,6 @@ it to a distinctive topology."""
                 elif i == 1:
                     pass
                 elif i < self.natoms() + 2:
-                    if i < 10:
-                        print(i-2, line, end='')
-
                     atom = atoms[i - 2]
                     atom.pos = np.array([float(line[20:28]),
                                          float(line[28:36]),
