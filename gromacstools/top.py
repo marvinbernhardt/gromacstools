@@ -26,6 +26,7 @@ class Atom:
     def __setattr__(self, attribute, value):
         """additionally modify dt_atom in the distinctive topology"""
         if attribute in ['name', 'mass', 'pos', 'vel']:
+            #print(f"setting {attribute} to {value}")
             self.dt_atom[attribute] = value
         self.__dict__[attribute] = value
 
@@ -178,8 +179,8 @@ it to a distinctive topology."""
 
         # expand nmols to mols
         for dt_moltype in self.distinctive_top:
-            mol = {'atoms': dt_moltype['atoms']}
-            dt_moltype['mols'] = [mol for molnr in range(dt_moltype['nmols'])]
+            mol = {'atoms': [atom.copy() for atom in dt_moltype['atoms']]}
+            dt_moltype['mols'] = [deepcopy(mol) for molnr in range(dt_moltype['nmols'])]
             del dt_moltype['nmols']
             del dt_moltype['atoms']
 
@@ -187,7 +188,7 @@ it to a distinctive topology."""
         """Loads a positions and velocities from a gro file into an
         existing distinctive topology."""
 
-        assert(hasattr(self, distinctive_top))
+        assert(hasattr(self, "distinctive_top"))
 
         atoms = self.atoms()
         with open(gro_filename, 'r') as f:
@@ -197,17 +198,20 @@ it to a distinctive topology."""
                 elif i == 1:
                     pass
                 elif i < self.natoms() + 2:
+                    if i < 10:
+                        print(i-2, line, end='')
+
                     atom = atoms[i - 2]
-                    atom['pos'] = np.array([float(line[20:28]),
-                                            float(line[28:36]),
-                                            float(line[36:44])])
+                    atom.pos = np.array([float(line[20:28]),
+                                         float(line[28:36]),
+                                         float(line[36:44])])
                     # try to read velocities if present in file
                     try:
-                        atom['vel'] = np.array([float(line[44:52]),
-                                                float(line[52:60]),
-                                                float(line[60:68])])
+                        atom.vel = np.array([float(line[44:52]),
+                                             float(line[52:60]),
+                                             float(line[60:68])])
                     except IndexError:
-                        atom['vel'] = np.full(3, np.nan)
+                        atom.vel = np.full(3, np.nan)
 
 
     def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
