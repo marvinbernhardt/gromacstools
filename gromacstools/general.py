@@ -8,7 +8,13 @@ def run_bash(command, stdin=None, logging=False):
 
     Raises an exception if there is a non-zero return code and prints stdout and stderr in that case.
     Gromacs commands like 'gmx ...' get an own log file.
+
+    'set -euo pipefail' is put before the command, in order to stop early if there is an error.
     """
+
+    # bash strict mode, always!
+    command = "set -euo pipefail\n" + command
+
     proc = subprocess.Popen(['bash', '-c', command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     stdout, stderr = proc.communicate()
 

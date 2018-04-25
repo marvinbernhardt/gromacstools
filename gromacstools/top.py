@@ -29,6 +29,7 @@ class Atom:
             self.__dt_atom[attribute] = value
         self.__dict__[attribute] = value
 
+
 class Molecule:
     """Molecule class. Contains atoms() function.
     It is not possible to chainge it's name (that comes from the moltype)
@@ -207,6 +208,24 @@ it to a distinctive topology."""
                                              float(line[60:68])])
                     except IndexError:
                         atom.vel = np.full(3, np.nan)
+
+
+    def load_gro_file_names(self, gro_filename):
+        """Loads atom and mol names from a gro file into an
+        existing distinctive topology."""
+
+        assert(hasattr(self, "distinctive_top"))
+
+        atoms = self.atoms()
+        with open(gro_filename, 'r') as f:
+            for i, line in enumerate(f):
+                if i == 0:
+                    pass
+                elif i == 1:
+                    pass
+                elif i < self.natoms() + 2:
+                    atom = atoms[i - 2]
+                    atom.name = line[10:15].strip()
 
 
     def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
@@ -394,7 +413,9 @@ def decompose_velocities_of_molecule(molecule):
 
     return velocities_trn, velocities_rot, velocities_vib
 
-def show_kinetic_energy_distribution(topology, kT):
+def calc_kinetic_energy_distribution(topology, kT):
+    """calculate how much kinetic energy is in translation, rotation and vibration
+    in units of kT"""
     e_kin_trn = 0
     e_kin_rot = 0
     e_kin_vib = 0
@@ -402,21 +423,25 @@ def show_kinetic_energy_distribution(topology, kT):
 
     for mol in topology.mols():
         vel_trn, vel_rot, vel_vib = decompose_velocities_of_molecule(mol)
-        vel_tot = vel_trn + vel_rot + vel_vib
         m_atommasses = np.array([atom.mass for atom in mol.atoms()])
 
         e_kin_trn += np.sum(m_atommasses @ vel_trn**2)
         e_kin_rot += np.sum(m_atommasses @ vel_rot**2)
         e_kin_vib += np.sum(m_atommasses @ vel_vib**2)
-        e_kin_tot += np.sum(m_atommasses @ vel_tot**2)
 
     e_kin_trn /= topology.nmols() * kT
     e_kin_rot /= topology.nmols() * kT
     e_kin_vib /= topology.nmols() * kT
-    e_kin_tot /= topology.nmols() * kT
+
+    return e_kin_trn, e_kin_rot, e_kin_vib
+
+def show_kinetic_energy_distribution(topology, kT):
+    """prints out how much kinetic energy is in translation, rotation and vibration
+    in units of kT"""
+
+    e_kin_trn, e_kin_rot, e_kin_vib = calc_kinetic_energy_distribution(topology, kT)
 
     print(f"""kinetic energy distribution:
 trn: {e_kin_trn:7.4f}
 rot: {e_kin_rot:7.4f}
-vib: {e_kin_vib:7.4f}
-tot: {e_kin_tot:7.4f}""")
+vib: {e_kin_vib:7.4f}""")
