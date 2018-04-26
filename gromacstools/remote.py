@@ -134,7 +134,7 @@ echo -n "finished $SLURM_JOB_ID at "; date
 
 
 def run_pbs(command, remote_host, remote_dir, name="name",
-            walltime="01:00:00", queue='chickencurry',
+            walltime="168:00:00", queue='chickencurry',
             nodes=1, dry_run=False):
     """Runs a pbs job on a remote host."""
     if queue == "chickencurry":
