@@ -380,7 +380,7 @@ def move_atomlist(atomlist, vector):
         atom.pos += vector
 
 
-def decompose_velocities_of_molecule(molecule):
+def decompose_velocities_of_molecule(molecule, pbc_check=True):
     """decompose the velocity of a molecule into translation,
     rotation and vibration parts."""
 
@@ -395,6 +395,11 @@ def decompose_velocities_of_molecule(molecule):
     mol_velocity_trn = m_atommasses @ velocities / molecule.mass
     velocities_trn = np.repeat([mol_velocity_trn], molecule.natoms, axis=0)
     positions_rel = positions - center_of_mass
+
+    if pbc_check:
+        if np.any(positions_rel >= 0.5):
+            raise Exception("""There is either a large molecule (~1 nm) or the molecule positions are split by periodic boundaries.
+You can turn of this check with pbc_check=False""")
 
     angular_momentum = m_atommasses @ np.cross(positions_rel, velocities)
 
@@ -413,13 +418,13 @@ def decompose_velocities_of_molecule(molecule):
 
     return velocities_trn, velocities_rot, velocities_vib
 
+
 def calc_kinetic_energy_distribution(topology, kT):
     """calculate how much kinetic energy is in translation, rotation and vibration
     in units of kT"""
     e_kin_trn = 0
     e_kin_rot = 0
     e_kin_vib = 0
-    e_kin_tot = 0
 
     for mol in topology.mols():
         vel_trn, vel_rot, vel_vib = decompose_velocities_of_molecule(mol)
@@ -434,6 +439,7 @@ def calc_kinetic_energy_distribution(topology, kT):
     e_kin_vib /= topology.nmols() * kT
 
     return e_kin_trn, e_kin_rot, e_kin_vib
+
 
 def show_kinetic_energy_distribution(topology, kT):
     """prints out how much kinetic energy is in translation, rotation and vibration
