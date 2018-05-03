@@ -18,12 +18,11 @@ def check_pbs_job(jobid, remote_host):
     """Checks the status of a PBS job"""
     proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"qstat -f {jobid}"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
-    try:
-        output = stdout.decode().strip()
+    output = stdout.decode().strip()
+    if output == "":
+        return 'C'
+    else:
         return next((line for line in output.splitlines() if 'job_state = ' in line)).split(' = ')[1:]
-    except IndexError:
-        print("No output - wrong jobid?")
-        return None
 
 
 def pull_files(filelist, remote_host, remote_dir, exclude=""):
