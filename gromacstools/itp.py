@@ -93,7 +93,7 @@ def get_dihedrals(itp_file):
 def pairs_from_bonds(bonds, distance=3):
     pairs = set()
     if distance == 3:
-    # iterate over all combinations of two bonds
+        # iterate over all combinations of two bonds
         for dihedral in dihedrals_from_bonds(bonds):
             dihedral_iter = iter(dihedral)
             pair = frozenset({next(dihedral_iter)[1], next(dihedral_iter)[1]})

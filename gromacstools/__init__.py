@@ -6,5 +6,5 @@ from . import mol
 from . import moltypes
 from . import remote
 from . import top
-from . import trr
+#from . import trr
 from . import xvg
