@@ -151,8 +151,9 @@ def set_molname(gro_file, atomlist, molname):
 def translate_with_pbc(gro_file, vector, out_file="conf-shifted.gro"):
     """tanslates the molecules in a gro_file along vector and uses pbc to put them all into the box"""
 
-    run_bash("gmx editconf -f conf.gro -o conf-temp-trans.gro -translate {} {} {}".format(*vector))
-    run_bash("gmx trjconv -f conf-temp-trans.gro -o {} -pbc mol <<< 0".format(out_file))
+    x, y, z = vector[0], vector[1], vector[2]
+    run_bash(f"gmx editconf -f {gro_file} -o conf-temp-trans.gro -translate {x} {y} {z}")
+    run_bash("gmx trjconv -f conf-temp-trans.gro -o {out_file} -pbc mol <<< 0")
     run_bash("rm conf-temp-trans.gro")
 
 

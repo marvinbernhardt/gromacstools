@@ -10,7 +10,7 @@ itp files."""
 
 def get_bonds(itp_file):
     config = configparser.ConfigParser(allow_no_value=True,
-                                       inline_comment_prefixes=['#', ';'])
+                                       inline_comment_prefixes=[';'])
     config.optionxform = str
     config.read(itp_file)
 
@@ -30,7 +30,7 @@ def get_bonds(itp_file):
 
 def get_pairs(itp_file):
     config = configparser.ConfigParser(allow_no_value=True,
-                                       inline_comment_prefixes=['#', ';'])
+                                       inline_comment_prefixes=[';'])
     config.optionxform = str
     config.read(itp_file)
 
@@ -50,7 +50,7 @@ def get_pairs(itp_file):
 
 def get_angles(itp_file):
     config = configparser.ConfigParser(allow_no_value=True,
-                                       inline_comment_prefixes=['#', ';'])
+                                       inline_comment_prefixes=[';'])
     config.optionxform = str
     config.read(itp_file)
 
@@ -71,7 +71,7 @@ def get_angles(itp_file):
 
 def get_dihedrals(itp_file):
     config = configparser.ConfigParser(allow_no_value=True,
-                                       inline_comment_prefixes=['#', ';'])
+                                       inline_comment_prefixes=[';'])
     config.optionxform = str
     config.read(itp_file)
 
