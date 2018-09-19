@@ -27,11 +27,11 @@ def check_pbs_job(jobid, remote_host):
 
 def pull_files(filelist, remote_host, remote_dir, exclude=""):
     """Copies a list of files from a directory on a remote host to the currend directory."""
-    filelist_string = ' :{}/'.format(remote_dir).join(filelist)
+    filelist_string = ' :{}/./'.format(remote_dir).join(filelist)
     if exclude == "":
-        run_bash(f'rsync -az {remote_host}:{remote_dir}/{filelist_string} ./', logging=False)
+        run_bash(f'rsync -azR {remote_host}:{remote_dir}/./{filelist_string} ./', logging=False)
     else:
-        run_bash(f'rsync -az --exclude={exclude} {remote_host}:{remote_dir}/{filelist_string} ./', logging=False)
+        run_bash(f'rsync -azR --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./', logging=False)
 
 
 def push_files(filelist, remote_host, remote_dir, exclude=""):
@@ -82,6 +82,27 @@ echo -n "finished $SLURM_JOB_ID at "; date
         stderr_string = stderr.decode().rstrip()
         if stderr_string.isdigit():
             return stderr_string
+        else:
+            return None
+    else:
+        return None
+
+
+def run_slurm_script(script, remote_host, remote_dir, dry_run=False):
+    """Runs a slurm script on a remote host."""
+
+    # write and copy to remote
+    with open("sbatch.sh", 'w') as f:
+        f.write(script)
+    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir), logging=False)
+
+    # run sbatch on remote and remote jobid
+    if not dry_run:
+        proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(remote_dir))], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        jobid = stdout.decode().strip()
+        if jobid.isdigit():
+            return jobid
         else:
             return None
     else:

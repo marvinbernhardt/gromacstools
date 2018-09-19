@@ -2,21 +2,27 @@ import subprocess
 import os
 
 
-def run_bash(command, stdin=None, logging=False):
+def run_bash(command, stdin=None, logging=False, print_stdout=False,
+             print_stderr=False):
     """
-    Runs a command in a bash shell and optionally logs the output in log/other_command.log.
+    Runs a command in a bash shell and optionally prints output or logs the
+    output in log/other_command.log.
 
-    Raises an exception if there is a non-zero return code and prints stdout and stderr in that case.
-    Gromacs commands like 'gmx ...' get an own log file.
+    Returns stdout as string.
 
-    'set -euo pipefail' is put before the command, in order to stop early if there is an error.
+    Raises an exception if there is a non-zero return code and prints stdout
+    and stderr in that case.
+
+    'set -euo pipefail' is put before the command, in order to stop early if
+    there is an error.
     """
 
     # bash strict mode, always!
-    command = "set -euo pipefail\n" + command
+    command_full = "set -euo pipefail\n" + command
 
-    proc = subprocess.Popen(['bash', '-c', command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
+    cp = subprocess.run(command_full, shell=True, check=True,
+                        capture_output=True, text=True, input=stdin)
+    cp.check_returncode()
 
     # write to logfile
     if logging:
@@ -25,24 +31,21 @@ def run_bash(command, stdin=None, logging=False):
             os.makedirs("log")
 
         # check if gmx command
-        commands = command.split()
-        if commands[0] == "gmx" and len(commands) > 1:
-            logfile_name = "log/gmx_" + commands[1] + ".log"
-        else:
-            logfile_name = "log/other_command.log"
+        commands = command.strip().split()
+        logfile_name = f"log/{commands[0]}.log"
 
         # print log to file
         with open(logfile_name, "w+") as logfile:
-            logfile.write(stdout.decode('utf-8'))
-            logfile.write(stderr.decode('utf-8'))
+            logfile.write(cp.stdout)
+            logfile.write(cp.stderr)
 
-    # raise error if returncode != 0
-    if proc.returncode:
-        print(stdout.decode())
-        print(stderr.decode())
-        raise Exception("There was a non-zero return code.")
+    # print
+    if print_stdout:
+        print(cp.stdout)
+    if print_stderr:
+        print(cp.stderr)
 
-    return stdout.decode()
+    return cp.stdout
 
 
 class WorkingDir():

@@ -1,6 +1,7 @@
-from copy import deepcopy
+#from numba import jit
 import numpy as np
 from scipy import linalg
+from copy import deepcopy
 
 class Atom:
     """Atom class. Can contain positions and velocities.
@@ -380,25 +381,31 @@ def move_atomlist(atomlist, vector):
         atom.pos += vector
 
 
-def decompose_velocities_of_molecule(molecule, pbc_check=True):
+def decompose_velocities_of_molecule(molecule):
     """decompose the velocity of a molecule into translation,
     rotation and vibration parts."""
 
     positions = np.array([atom.pos for atom in molecule.atoms()])
     velocities = np.array([atom.vel for atom in molecule.atoms()])
     m_atommasses = np.array([atom.mass for atom in molecule.atoms()])
+    n_atoms = molecule.natoms
+    mass = molecule.mass
 
-    if molecule.natoms == 1:
+    return decompose_velocities_of_molecule_optimized(positions, velocities, m_atommasses, n_atoms, mass)
+
+
+#@jit
+def decompose_velocities_of_molecule_optimized(positions, velocities, m_atommasses, n_atoms, mass):
+    if n_atoms == 1:
         return velocities, np.zeros((1, 3)), np.zeros((1, 3))
 
-    center_of_mass = m_atommasses @ positions / molecule.mass
-    mol_velocity_trn = m_atommasses @ velocities / molecule.mass
-    velocities_trn = np.repeat([mol_velocity_trn], molecule.natoms, axis=0)
+    center_of_mass = m_atommasses @ positions / mass
+    mol_velocity_trn = m_atommasses @ velocities / mass
+    velocities_trn = np.repeat([mol_velocity_trn], n_atoms, axis=0)
     positions_rel = positions - center_of_mass
 
-    if pbc_check:
-        if np.any(positions_rel >= 0.5):
-            raise Exception("""There is either a large molecule (~1 nm) or the molecule positions are split by periodic boundaries.
+    if np.any(positions_rel >= 1):
+        raise Exception("""There is either a large molecule (~1 nm) or the molecule positions are split by periodic boundaries.
 You can turn of this check with pbc_check=False""")
 
     angular_momentum = m_atommasses @ np.cross(positions_rel, velocities)
@@ -408,7 +415,7 @@ You can turn of this check with pbc_check=False""")
         moi_tensor += m_atommasses[i] * ((positions_rel[i] @ positions_rel[i]) * np.identity(3)
                                          - np.tensordot(positions_rel[i], positions_rel[i], axes=0))
 
-    if molecule.natoms == 2:
+    if n_atoms == 2:
         raise Exception("linear molecules not implemented")
     else:
         angular_velocity = linalg.solve(moi_tensor, angular_momentum)
@@ -417,6 +424,7 @@ You can turn of this check with pbc_check=False""")
     velocities_vib = velocities - velocities_trn - velocities_rot
 
     return velocities_trn, velocities_rot, velocities_vib
+
 
 
 def calc_kinetic_energy_distribution(topology, kT):
