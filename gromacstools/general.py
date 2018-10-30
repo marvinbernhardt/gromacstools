@@ -2,42 +2,35 @@ import subprocess
 import os
 
 
-def run_bash(command, stdin=None, logging=False, print_stdout=False,
-             print_stderr=False):
+def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
     """
-    Runs a command in a bash shell and optionally prints output or logs the
-    output in log/other_command.log.
+    Runs a command in a sh (not bash :/) shell and optionally prints output.
 
     Returns stdout as string.
 
-    Raises an exception if there is a non-zero return code and prints stdout
-    and stderr in that case.
+    Raises an exception if there is a non-zero return code and prints returncode,
+    stdout and stderr in that case.
 
-    'set -euo pipefail' is put before the command, in order to stop early if
+    'set -euo pipefail' is run before the command, in order to stop early if
     there is an error.
     """
 
     # bash strict mode, always!
     command_full = "set -euo pipefail\n" + command
 
-    cp = subprocess.run(command_full, shell=True, check=True,
-                        capture_output=True, text=True, input=stdin)
-    cp.check_returncode()
-
-    # write to logfile
-    if logging:
-        # create log directory if needed
-        if not os.path.exists("log"):
-            os.makedirs("log")
-
-        # check if gmx command
-        commands = command.strip().split()
-        logfile_name = f"log/{commands[0]}.log"
-
-        # print log to file
-        with open(logfile_name, "w+") as logfile:
-            logfile.write(cp.stdout)
-            logfile.write(cp.stderr)
+    try:
+        cp = subprocess.run(command_full, shell=True, check=True,
+                            capture_output=True, text=True, input=stdin)
+    except subprocess.CalledProcessError as e:
+        print("#=#=# The command #=#=#")
+        print(e.cmd)
+        print("#=#=# returned #=#=#")
+        print(e.returncode)
+        print("#=#=# stdout is #=#=#")
+        print(e.stdout)
+        print("#=#=# stderr is #=#=#")
+        print(e.stderr)
+        raise
 
     # print
     if print_stdout:
