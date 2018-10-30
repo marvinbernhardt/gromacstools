@@ -29,18 +29,18 @@ def pull_files(filelist, remote_host, remote_dir, exclude=""):
     """Copies a list of files from a directory on a remote host to the currend directory."""
     filelist_string = ' :{}/./'.format(remote_dir).join(filelist)
     if exclude == "":
-        run_bash(f'rsync -azR {remote_host}:{remote_dir}/./{filelist_string} ./', logging=False)
+        run_bash(f'rsync -azR {remote_host}:{remote_dir}/./{filelist_string} ./')
     else:
-        run_bash(f'rsync -azR --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./', logging=False)
+        run_bash(f'rsync -azR --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./')
 
 
 def push_files(filelist, remote_host, remote_dir, exclude=""):
     """Copies a list of files on a remote host into a specified directory."""
     filelist_string = ' '.join(filelist)
     if exclude == "":
-        run_bash(f'rsync -az {filelist_string} {remote_host}:{remote_dir}/', logging=False)
+        run_bash(f'rsync -az {filelist_string} {remote_host}:{remote_dir}/')
     else:
-        run_bash(f'rsync -az --exclude="{exclude}" {filelist_string} {remote_host}:{remote_dir}/', logging=False)
+        run_bash(f'rsync -az --exclude="{exclude}" {filelist_string} {remote_host}:{remote_dir}/')
 
 
 def run_slurm_array(command, remote_host, remote_dir, array_start, array_end, array_step=1, name="name", time_minutes="600", mem_per_cpu=1750, cpus_per_task=None, dry_run=False):
@@ -73,7 +73,7 @@ echo -n "finished $SLURM_JOB_ID at "; date
     # write and copy to remote
     with open("sbatch.sh", 'w') as f:
         f.write(sbatch_script)
-    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir), logging=False)
+    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
@@ -94,7 +94,7 @@ def run_slurm_script(script, remote_host, remote_dir, dry_run=False):
     # write and copy to remote
     with open("sbatch.sh", 'w') as f:
         f.write(script)
-    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir), logging=False)
+    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
@@ -138,7 +138,7 @@ echo -n "finished $SLURM_JOB_ID at "; date
     # write and copy to remote
     with open("sbatch.sh", 'w') as f:
         f.write(sbatch_script)
-    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir), logging=False)
+    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
@@ -189,7 +189,7 @@ echo -n "finished $PBS_JOBID at "; date
     # write and copy to remote
     with open("qsub.sh", 'w') as f:
         f.write(qsub_script)
-    run_bash(f"rsync -az qsub.sh {remote_host}:{remote_dir}/", logging=False)
+    run_bash(f"rsync -az qsub.sh {remote_host}:{remote_dir}/")
 
     # run qsub on remote and remote jobid
     if not dry_run:
