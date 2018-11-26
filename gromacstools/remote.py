@@ -29,9 +29,9 @@ def pull_files(filelist, remote_host, remote_dir, exclude=""):
     """Copies a list of files from a directory on a remote host to the currend directory."""
     filelist_string = ' :{}/./'.format(remote_dir).join(filelist)
     if exclude == "":
-        run_bash(f'rsync -azR {remote_host}:{remote_dir}/./{filelist_string} ./')
+        run_bash(f'rsync -azR --ignore-missing-args {remote_host}:{remote_dir}/./{filelist_string} ./')
     else:
-        run_bash(f'rsync -azR --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./')
+        run_bash(f'rsync -azR --ignore-missing-args --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./')
 
 
 def push_files(filelist, remote_host, remote_dir, exclude=""):
