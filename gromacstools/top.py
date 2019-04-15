@@ -68,9 +68,9 @@ class Moltype:
         self.__dt_moltype = dt_moltype
         self.__dict__['name'] = dt_moltype['name']
         self.dt_mols = dt_moltype['mols']
-        self.__dict__['rot_treat'] = dt_moltype['rot_treat']
-        self.__dict__['abc_indicators'] = dt_moltype['abc_indicators']
-        self.__dict__['sigma'] = dt_moltype['sigma']
+        self.__dict__['rot_treat'] = dt_moltype.get('rot_treat', None)
+        self.__dict__['abc_indicators'] = dt_moltype.get('abc_indicators', None)
+        self.__dict__['sigma'] = dt_moltype.get('sigma', None)
         self.nmols = len(self.dt_mols)
         self.natomtypes = len(self.atomtypes())
         self.natoms = self.nmols * self.natomtypes
