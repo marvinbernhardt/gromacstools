@@ -207,9 +207,8 @@ it to a distinctive topology."""
                         atom.vel = np.array([float(line[44:52]),
                                              float(line[52:60]),
                                              float(line[60:68])])
-                    except IndexError:
-                        atom.vel = np.full(3, np.nan)
-
+                    except (IndexError, ValueError):
+                        atom.vel = None
 
     def load_gro_file_names(self, gro_filename):
         """Loads atom and mol names from a gro file into an
@@ -227,7 +226,6 @@ it to a distinctive topology."""
                 elif i < self.natoms() + 2:
                     atom = atoms[i - 2]
                     atom.name = line[10:15].strip()
-
 
     def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
                       abc_indicators_dict, sigma_dict):
@@ -253,8 +251,8 @@ positions and velocities."""
                         atom['vel'] = np.array([float(line[44:52]),
                                                 float(line[52:60]),
                                                 float(line[60:68])])
-                    except IndexError:
-                        atom['vel'] = np.full(3, np.nan)
+                    except (IndexError, ValueError):
+                        atom['vel'] = None
 
                     atoms.append(atom)
 
@@ -338,7 +336,7 @@ positions and velocities."""
                             f.write(f"{atom.vel[0]:> 8.4f}")
                             f.write(f"{atom.vel[1]:> 8.4f}")
                             f.write(f"{atom.vel[2]:> 8.4f}")
-                        except IndexError:
+                        except (IndexError, TypeError):
                             pass
                         f.write("\n")
             f.write(f"{box[0]} {box[1]} {box[2]}\n")
