@@ -312,6 +312,14 @@ positions and velocities."""
 
         self.distinctive_top = dt_moltypes
 
+
+    def _groint(number):
+        if number < 100000:
+            return number
+        else:
+            return int(str(number)[-5:])
+
+
     def save_gro_file(self, gro_filename, box):
         """Saves a distinctive topology in a gro file."""
         with open(gro_filename, 'w') as f:
@@ -320,10 +328,10 @@ positions and velocities."""
             for moltype in self.moltypes():
                 for mol in moltype.mols():
                     for atom in mol.atoms():
-                        f.write(f"{mol.index_in_top + 1:>5}")
+                        f.write(f"{_groint(mol.index_in_top + 1):>5}")
                         f.write(f"{mol.name:>5}")
                         f.write(f"{atom.name:>5}")
-                        f.write(f"{atom.index_in_top + 1:>5}")
+                        f.write(f"{_groint(atom.index_in_top + 1):>5}")
                         try:
                             f.write(f"{atom.pos[0]:> 8.3f}")
                             f.write(f"{atom.pos[1]:> 8.3f}")
