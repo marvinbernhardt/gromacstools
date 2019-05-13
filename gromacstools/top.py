@@ -312,15 +312,13 @@ positions and velocities."""
 
         self.distinctive_top = dt_moltypes
 
-
     def _groint(self, number):
         if number < 100000:
             return number
         else:
             return int(str(number)[-5:])
 
-
-    def save_gro_file(self, gro_filename, box):
+    def save_gro_file(self, gro_filename, box, write_empty=False):
         """Saves a distinctive topology in a gro file."""
         with open(gro_filename, 'w') as f:
             f.write("exported from SimTop\n")
@@ -333,13 +331,19 @@ positions and velocities."""
                         f.write(f"{atom.name:>5}")
                         f.write(f"{self._groint(atom.index_in_top + 1):>5}")
                         try:
-                            f.write(f"{atom.pos[0]:> 8.3f}")
-                            f.write(f"{atom.pos[1]:> 8.3f}")
-                            f.write(f"{atom.pos[2]:> 8.3f}")
-                        except IndexError:
-                            raise KeyError("""There are no positions in this
-                                           topology. Not possible to write
-                                           gro file!""")
+                            x = atom.pos[0]
+                            y = atom.pos[1]
+                            z = atom.pos[2]
+                        except (IndexError, AttributeError):
+                            if write_empty:
+                                x = y = z = np.nan
+                            else:
+                                raise KeyError("""There are no positions in this
+                                               topology. Not possible to write
+                                               gro file!""")
+                        f.write(f"{x:> 8.3f}")
+                        f.write(f"{y:> 8.3f}")
+                        f.write(f"{z:> 8.3f}")
                         try:
                             f.write(f"{atom.vel[0]:> 8.4f}")
                             f.write(f"{atom.vel[1]:> 8.4f}")
