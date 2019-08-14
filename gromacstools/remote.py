@@ -34,13 +34,14 @@ def pull_files(filelist, remote_host, remote_dir, exclude=""):
         run_bash(f'rsync -azR --ignore-missing-args --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./')
 
 
-def push_files(filelist, remote_host, remote_dir, exclude=""):
+def push_files(filelist, remote_host, remote_dir, exclude="", relative=True):
     """Copies a list of files on a remote host into a specified directory."""
     filelist_string = ' '.join(filelist)
     if exclude == "":
-        run_bash(f'rsync -az {filelist_string} {remote_host}:{remote_dir}/')
-    else:
-        run_bash(f'rsync -az --exclude="{exclude}" {filelist_string} {remote_host}:{remote_dir}/')
+        exclude_string = f'--exclude="{exclude}"'
+    if relative:
+        relative_string = '--relative'
+    run_bash(f'rsync -az {relative_string} {exclude_string} {filelist_string} {remote_host}:{remote_dir}/')
 
 
 def run_slurm_array(command, remote_host, remote_dir, array_start, array_end, array_step=1, name="name", time_minutes="600", mem_per_cpu=1750, cpus_per_task=None, dry_run=False):
