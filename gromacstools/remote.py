@@ -37,7 +37,9 @@ def pull_files(filelist, remote_host, remote_dir, exclude=""):
 def push_files(filelist, remote_host, remote_dir, exclude="", relative=True):
     """Copies a list of files on a remote host into a specified directory."""
     filelist_string = ' '.join(filelist)
-    if exclude == "":
+    exclude_string = ''
+    relative_string = ''
+    if exclude != "":
         exclude_string = f'--exclude="{exclude}"'
     if relative:
         relative_string = '--relative'
