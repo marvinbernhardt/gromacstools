@@ -14,6 +14,24 @@ def check_slurm_job(jobid, remote_host):
         return None
 
 
+def check_slurm_jobs(jobids, remote_host):
+    """Checks the status of multiple slurm jobs"""
+    proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; sacct -nPj {} -o jobid,state"'.format(','.join(jobids)))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    try:
+        line_list = stdout.decode().splitlines()
+    except IndexError:
+        print("No output - wrong jobids?")
+        return None
+    stati_list = []
+    for jobid in jobids:
+        for line in line_list:
+            if line.startswith(str(jobid) + '|'):
+                stati_list.append(line.split('|', 1)[1])
+                break
+    return stati_list
+
+
 def check_pbs_job(jobid, remote_host):
     """Checks the status of a PBS job"""
     proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"qstat -f {jobid}"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

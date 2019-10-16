@@ -348,7 +348,7 @@ positions and velocities."""
                             f.write(f"{atom.vel[0]:> 8.4f}")
                             f.write(f"{atom.vel[1]:> 8.4f}")
                             f.write(f"{atom.vel[2]:> 8.4f}")
-                        except (IndexError, TypeError):
+                        except (IndexError, TypeError, AttributeError):
                             pass
                         f.write("\n")
             f.write(f"{box[0]} {box[1]} {box[2]}\n")
