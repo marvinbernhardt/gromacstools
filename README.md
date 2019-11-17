@@ -44,6 +44,7 @@ def write_gro_file(moltypes, out_filename, box)
 ### remote
 ```python
 def check_slurm_job(jobid, remote_host)
+def check_slurm_jobs(jobids, remote_host)
 def pull_files(filelist, remote_host, remote_dir, exclude="")
 def push_files(filelist, remote_host, remote_dir, exclude="")
 def run_slurm_array(command, remote_host, remote_dir, array_start, array_end, array_step=1, name="name", time_minutes="600", mem_per_cpu=1750, cpus_per_task=None, dry_run=False)
