@@ -8,8 +8,8 @@ def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
 
     Returns stdout as string.
 
-    Raises an exception if there is a non-zero return code and prints returncode,
-    stdout and stderr in that case.
+    Raises an exception if there is a non-zero return code and prints
+    returncode, stdout and stderr in that case.
 
     'set -euo pipefail' is run before the command, in order to stop early if
     there is an error.
@@ -19,8 +19,14 @@ def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
     command_full = "set -euo pipefail\n" + command
 
     try:
-        cp = subprocess.run(command_full, shell=True, check=True,
-                            capture_output=True, text=True, input=stdin)
+        cp = subprocess.run(
+            command_full,
+            shell=True,
+            check=True,
+            capture_output=True,
+            text=True,
+            input=stdin,
+        )
     except subprocess.CalledProcessError as e:
         print("#=#=# The command #=#=#")
         print(e.cmd)
@@ -41,7 +47,7 @@ def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
     return cp.stdout
 
 
-class WorkingDir():
+class WorkingDir:
     """
     Context Manager to execute code in a certain directory.
 
@@ -50,6 +56,7 @@ class WorkingDir():
     >>> with WorkingDir(path):
     ...     do something here
     """
+
     def __init__(self, path):
         self.path = os.path.expanduser(path)
         self.old_directory = os.getcwd()

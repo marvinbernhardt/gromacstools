@@ -5,7 +5,15 @@ from .general import run_bash
 
 def check_slurm_job(jobid, remote_host):
     """Checks the status of a slurm job"""
-    proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; sacct -nPj {} -o State"'.format(jobid))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        [
+            "ssh",
+            remote_host,
+            *shlex.split('"source /etc/profile; sacct -nPj {} -o State"'.format(jobid)),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout, stderr = proc.communicate()
     try:
         return stdout.decode().split()
@@ -16,7 +24,19 @@ def check_slurm_job(jobid, remote_host):
 
 def check_slurm_jobs(jobids, remote_host):
     """Checks the status of multiple slurm jobs"""
-    proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; sacct -nPj {} -o jobid,state"'.format(','.join(jobids)))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        [
+            "ssh",
+            remote_host,
+            *shlex.split(
+                '"source /etc/profile; sacct -npj {} -o jobid,state"'.format(
+                    ",".join(jobids)
+                )
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout, stderr = proc.communicate()
     try:
         line_list = stdout.decode().splitlines()
@@ -26,45 +46,75 @@ def check_slurm_jobs(jobids, remote_host):
     stati_list = []
     for jobid in jobids:
         for line in line_list:
-            if line.startswith(str(jobid) + '|'):
-                stati_list.append(line.split('|', 1)[1])
+            if line.startswith(str(jobid) + "|"):
+                stati_list.append(line.split("|")[1])
                 break
     return stati_list
 
 
 def check_pbs_job(jobid, remote_host):
     """Checks the status of a PBS job"""
-    proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"qstat -f {jobid}"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        ["ssh", remote_host, *shlex.split(f'"qstat -f {jobid}"')],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout, stderr = proc.communicate()
     output = stdout.decode().strip()
     if output == "":
-        return 'C'
+        return "C"
     else:
-        return next((line for line in output.splitlines() if 'job_state = ' in line)).split(' = ')[1:]
+        return next(
+            (line for line in output.splitlines() if "job_state = " in line)
+        ).split(" = ")[1:]
 
 
 def pull_files(filelist, remote_host, remote_dir, exclude=""):
-    """Copies a list of files from a directory on a remote host to the currend directory."""
-    filelist_string = ' :{}/./'.format(remote_dir).join(filelist)
+    """
+    Copies a list of files from a directory on a remote host to the current
+    directory.
+    """
+    filelist_string = " :{}/./".format(remote_dir).join(filelist)
     if exclude == "":
-        run_bash(f'rsync -azR --ignore-missing-args {remote_host}:{remote_dir}/./{filelist_string} ./')
+        run_bash(
+            f"rsync -azR --ignore-missing-args "
+            f"{remote_host}:{remote_dir}/./{filelist_string} ./"
+        )
     else:
-        run_bash(f'rsync -azR --ignore-missing-args --exclude={exclude} {remote_host}:{remote_dir}/./{filelist_string} ./')
+        run_bash(
+            f"rsync -azR --ignore-missing-args --exclude={exclude} "
+            f"{remote_host}:{remote_dir}/./{filelist_string} ./"
+        )
 
 
 def push_files(filelist, remote_host, remote_dir, exclude="", relative=True):
     """Copies a list of files on a remote host into a specified directory."""
-    filelist_string = ' '.join(filelist)
-    exclude_string = ''
-    relative_string = ''
+    filelist_string = " ".join(filelist)
+    exclude_string = ""
+    relative_string = ""
     if exclude != "":
         exclude_string = f'--exclude="{exclude}"'
     if relative:
-        relative_string = '--relative'
-    run_bash(f'rsync -az {relative_string} {exclude_string} {filelist_string} {remote_host}:{remote_dir}/')
+        relative_string = "--relative"
+    run_bash(
+        f"rsync -az {relative_string} {exclude_string} {filelist_string} "
+        f"{remote_host}:{remote_dir}/"
+    )
 
 
-def run_slurm_array(command, remote_host, remote_dir, array_start, array_end, array_step=1, name="name", time_minutes="600", mem_per_cpu=1750, cpus_per_task=None, dry_run=False):
+def run_slurm_array(
+    command,
+    remote_host,
+    remote_dir,
+    array_start,
+    array_end,
+    array_step=1,
+    name="name",
+    time_minutes="600",
+    mem_per_cpu=1750,
+    cpus_per_task=None,
+    dry_run=False,
+):
     """Runs a slurm job array on a remote host. Settings should be good for OpenMP."""
     if cpus_per_task is not None:
         cpus_per_task_line = f"#SBATCH --cpus-per-task={cpus_per_task}\n"
@@ -92,13 +142,26 @@ set -euo pipefail
 echo -n "finished $SLURM_JOB_ID at "; date
 """
     # write and copy to remote
-    with open("sbatch.sh", 'w') as f:
+    with open("sbatch.sh", "w") as f:
         f.write(sbatch_script)
     run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
-        proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(remote_dir))], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                "ssh",
+                remote_host,
+                *shlex.split(
+                    '"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(
+                        remote_dir
+                    )
+                ),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
         stdout, stderr = proc.communicate()
         stderr_string = stderr.decode().rstrip()
         if stderr_string.isdigit():
@@ -113,13 +176,26 @@ def run_slurm_script(script, remote_host, remote_dir, dry_run=False):
     """Runs a slurm script on a remote host."""
 
     # write and copy to remote
-    with open("sbatch.sh", 'w') as f:
+    with open("sbatch.sh", "w") as f:
         f.write(script)
     run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
-        proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(remote_dir))], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                "ssh",
+                remote_host,
+                *shlex.split(
+                    '"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(
+                        remote_dir
+                    )
+                ),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
         stdout, stderr = proc.communicate()
         jobid = stdout.decode().strip()
         if jobid.isdigit():
@@ -130,7 +206,16 @@ def run_slurm_script(script, remote_host, remote_dir, dry_run=False):
         return None
 
 
-def run_slurm(command, remote_host, remote_dir, name="name", time_minutes="600", mem_per_cpu=1750, cpus_per_task=None, dry_run=False):
+def run_slurm(
+    command,
+    remote_host,
+    remote_dir,
+    name="name",
+    time_minutes="600",
+    mem_per_cpu=1750,
+    cpus_per_task=None,
+    dry_run=False,
+):
     """Runs a slurm job on a remote host. Settings should be good for OpenMP."""
     if cpus_per_task is not None:
         cpus_per_task_line = f"#SBATCH --cpus-per-task={cpus_per_task}\n"
@@ -157,13 +242,26 @@ set -euo pipefail
 echo -n "finished $SLURM_JOB_ID at "; date
 """
     # write and copy to remote
-    with open("sbatch.sh", 'w') as f:
+    with open("sbatch.sh", "w") as f:
         f.write(sbatch_script)
     run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
 
     # run sbatch on remote and remote jobid
     if not dry_run:
-        proc = subprocess.Popen(['ssh', remote_host, *shlex.split('"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(remote_dir))], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                "ssh",
+                remote_host,
+                *shlex.split(
+                    '"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(
+                        remote_dir
+                    )
+                ),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
         stdout, stderr = proc.communicate()
         stderr_string = stderr.decode().rstrip()
         if stderr_string.isdigit():
@@ -174,9 +272,16 @@ echo -n "finished $SLURM_JOB_ID at "; date
         return None
 
 
-def run_pbs(command, remote_host, remote_dir, name="name",
-            walltime="168:00:00", queue='chickencurry',
-            nodes=1, dry_run=False):
+def run_pbs(
+    command,
+    remote_host,
+    remote_dir,
+    name="name",
+    walltime="168:00:00",
+    queue="chickencurry",
+    nodes=1,
+    dry_run=False,
+):
     """Runs a pbs job on a remote host."""
     if queue == "chickencurry":
         nodes_ppn_line = "#PBS -l nodes=1:ppn=24"
@@ -208,16 +313,25 @@ set -euo pipefail
 echo -n "finished $PBS_JOBID at "; date
 """
     # write and copy to remote
-    with open("qsub.sh", 'w') as f:
+    with open("qsub.sh", "w") as f:
         f.write(qsub_script)
     run_bash(f"rsync -az qsub.sh {remote_host}:{remote_dir}/")
 
     # run qsub on remote and remote jobid
     if not dry_run:
-        proc = subprocess.Popen(['ssh', remote_host, *shlex.split(f'"source /etc/profile; cd {remote_dir}; qsub qsub.sh"')], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        proc = subprocess.Popen(
+            [
+                "ssh",
+                remote_host,
+                *shlex.split(f'"source /etc/profile; cd {remote_dir}; qsub qsub.sh"'),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
         stdout, stderr = proc.communicate()
         stdout_string = stdout.decode().rstrip()
-        jobid = stdout_string.split('.')[0]
+        jobid = stdout_string.split(".")[0]
         if jobid.isdigit():
             return jobid
         else:

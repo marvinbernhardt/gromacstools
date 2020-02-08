@@ -1,7 +1,7 @@
-#from numba import jit
 import numpy as np
 from scipy import linalg
 from copy import deepcopy
+
 
 class Atom:
     """Atom class. Can contain positions and velocities.
@@ -10,37 +10,39 @@ class Atom:
 
     def __init__(self, dt_atom, index_in_top, index_in_moltype, index_in_mol):
         self.__dt_atom = dt_atom
-        self.__dict__['name'] = dt_atom['name']
-        self.__dict__['mass'] = dt_atom['mass']
+        self.__dict__["name"] = dt_atom["name"]
+        self.__dict__["mass"] = dt_atom["mass"]
         self.index_in_top = index_in_top
         self.index_in_moltype = index_in_moltype
         self.index_in_mol = index_in_mol
         try:
-            self.__dict__['pos'] = dt_atom['pos']
-        except:
+            self.__dict__["pos"] = dt_atom["pos"]
+        except Exception:
             pass
         try:
-            self.__dict__['vel'] = dt_atom['vel']
-        except:
+            self.__dict__["vel"] = dt_atom["vel"]
+        except Exception:
             pass
 
     def __setattr__(self, attribute, value):
         """additionally modify dt_atom in the distinctive topology"""
-        if attribute in ['name', 'mass', 'pos', 'vel']:
+        if attribute in ["name", "mass", "pos", "vel"]:
             self.__dt_atom[attribute] = value
         self.__dict__[attribute] = value
 
 
 class Molecule:
-    """Molecule class. Contains atoms() function.
+    """
+    Molecule class. Contains atoms() function.
     It is not possible to chainge it's name (that comes from the moltype)
     nor its atoms (not implemented)."""
 
-    def __init__(self, dt_mol, name, index_in_top, index_in_moltype,
-                 firstatom, moltype_nr):
+    def __init__(
+        self, dt_mol, name, index_in_top, index_in_moltype, firstatom, moltype_nr
+    ):
         self.name = name
-        self.__dt_atoms = dt_mol['atoms']
-        self.mass = sum([dt_atom['mass'] for dt_atom in self.__dt_atoms])
+        self.__dt_atoms = dt_mol["atoms"]
+        self.mass = sum([dt_atom["mass"] for dt_atom in self.__dt_atoms])
         self.natoms = len(self.__dt_atoms)
         self.index_in_top = index_in_top
         self.index_in_moltype = index_in_moltype
@@ -51,38 +53,41 @@ class Molecule:
         """Return list of Atom objects in this Molecule."""
         atoms = []
         for index_in_mol, dt_atom in enumerate(self.__dt_atoms):
-            index_in_moltype = (self.index_in_moltype * self.natoms
-                                + index_in_mol)
+            index_in_moltype = self.index_in_moltype * self.natoms + index_in_mol
             index_in_top = self.firstatom + index_in_mol
-            atoms.append(Atom(dt_atom, index_in_top, index_in_moltype,
-                              index_in_mol))
+            atoms.append(Atom(dt_atom, index_in_top, index_in_moltype, index_in_mol))
         return atoms
 
 
 class Moltype:
-    """Moltype class. Contains mols() and atoms() function.
-    Modifications to objects ['name', 'rot_treat', 'abc_indicators', 'sigma'] will also modify
-    the distinctive topology (__setattr__ method is altered)."""
+    """
+    Moltype class.
+
+    Contains mols() and atoms() function.
+    Modifications to objects ['name', 'rot_treat', 'abc_indicators', 'sigma'] will also
+    modify the distinctive topology (__setattr__ method is altered).
+    """
 
     def __init__(self, dt_moltype, index_in_top, firstmol, firstatom):
         self.__dt_moltype = dt_moltype
-        self.__dict__['name'] = dt_moltype['name']
-        self.dt_mols = dt_moltype['mols']
-        self.__dict__['rot_treat'] = dt_moltype.get('rot_treat', None)
-        self.__dict__['abc_indicators'] = dt_moltype.get('abc_indicators', None)
-        self.__dict__['sigma'] = dt_moltype.get('sigma', None)
+        self.__dict__["name"] = dt_moltype["name"]
+        self.dt_mols = dt_moltype["mols"]
+        self.__dict__["rot_treat"] = dt_moltype.get("rot_treat", None)
+        self.__dict__["abc_indicators"] = dt_moltype.get("abc_indicators", None)
+        self.__dict__["sigma"] = dt_moltype.get("sigma", None)
         self.nmols = len(self.dt_mols)
         self.natomtypes = len(self.atomtypes())
         self.natoms = self.nmols * self.natomtypes
-        self.mass = self.nmols * sum([atomtype['mass'] for atomtype
-                                      in self.atomtypes()])
+        self.mass = self.nmols * sum(
+            [atomtype["mass"] for atomtype in self.atomtypes()]
+        )
         self.index_in_top = index_in_top
         self.firstmol = firstmol
         self.firstatom = firstatom
 
     def __setattr__(self, attribute, value):
         """additionally modify dt_moltype in the distinctive topology"""
-        if attribute in ['name', 'rot_treat', 'abc_indicators', 'sigma']:
+        if attribute in ["name", "rot_treat", "abc_indicators", "sigma"]:
             self.__dt_moltype[attribute] = value
         self.__dict__[attribute] = value
 
@@ -98,9 +103,16 @@ class Moltype:
         firstatom = self.firstatom
         for index_in_moltype, dt_mol in enumerate(self.dt_mols):
             index_in_top = self.firstmol + index_in_moltype
-            mols.append(Molecule(dt_mol, self.name, index_in_top,
-                                 index_in_moltype,
-                                 firstatom, self.index_in_top))
+            mols.append(
+                Molecule(
+                    dt_mol,
+                    self.name,
+                    index_in_top,
+                    index_in_moltype,
+                    firstatom,
+                    self.index_in_top,
+                )
+            )
             firstatom += len(self.atomtypes())
         return mols
 
@@ -115,8 +127,8 @@ class Moltype:
     def atomtypes(self):
         """Return list of atomtypes. Needed internally."""
         atomtypes = []
-        for dt_atom in self.dt_mols[0]['atoms']:
-            atomtype = {'name': dt_atom['name'], 'mass': dt_atom['mass']}
+        for dt_atom in self.dt_mols[0]["atoms"]:
+            atomtype = {"name": dt_atom["name"], "mass": dt_atom["mass"]}
             atomtypes.append(atomtype)
         return atomtypes
 
@@ -179,19 +191,19 @@ it to a distinctive topology."""
 
         # expand nmols to mols
         for dt_moltype in self.distinctive_top:
-            mol = {'atoms': [atom.copy() for atom in dt_moltype['atoms']]}
-            dt_moltype['mols'] = [deepcopy(mol) for molnr in range(dt_moltype['nmols'])]
-            del dt_moltype['nmols']
-            del dt_moltype['atoms']
+            mol = {"atoms": [atom.copy() for atom in dt_moltype["atoms"]]}
+            dt_moltype["mols"] = [deepcopy(mol) for molnr in range(dt_moltype["nmols"])]
+            del dt_moltype["nmols"]
+            del dt_moltype["atoms"]
 
     def load_gro_file_pos_vel(self, gro_filename):
         """Loads a positions and velocities from a gro file into an
         existing distinctive topology."""
 
-        assert(hasattr(self, "distinctive_top"))
+        assert hasattr(self, "distinctive_top")
 
         atoms = self.atoms()
-        with open(gro_filename, 'r') as f:
+        with open(gro_filename, "r") as f:
             for i, line in enumerate(f):
                 if i == 0:
                     pass
@@ -199,14 +211,14 @@ it to a distinctive topology."""
                     pass
                 elif i < self.natoms() + 2:
                     atom = atoms[i - 2]
-                    atom.pos = np.array([float(line[20:28]),
-                                         float(line[28:36]),
-                                         float(line[36:44])])
+                    atom.pos = np.array(
+                        [float(line[20:28]), float(line[28:36]), float(line[36:44])]
+                    )
                     # try to read velocities if present in file
                     try:
-                        atom.vel = np.array([float(line[44:52]),
-                                             float(line[52:60]),
-                                             float(line[60:68])])
+                        atom.vel = np.array(
+                            [float(line[44:52]), float(line[52:60]), float(line[60:68])]
+                        )
                     except (IndexError, ValueError):
                         atom.vel = None
 
@@ -214,10 +226,10 @@ it to a distinctive topology."""
         """Loads atom and mol names from a gro file into an
         existing distinctive topology."""
 
-        assert(hasattr(self, "distinctive_top"))
+        assert hasattr(self, "distinctive_top")
 
         atoms = self.atoms()
-        with open(gro_filename, 'r') as f:
+        with open(gro_filename, "r") as f:
             for i, line in enumerate(f):
                 if i == 0:
                     pass
@@ -227,12 +239,18 @@ it to a distinctive topology."""
                     atom = atoms[i - 2]
                     atom.name = line[10:15].strip()
 
-    def load_gro_file(self, gro_filename, atom_mass_dict, rot_treat_dict,
-                      abc_indicators_dict, sigma_dict):
+    def load_gro_file(
+        self,
+        gro_filename,
+        atom_mass_dict,
+        rot_treat_dict,
+        abc_indicators_dict,
+        sigma_dict,
+    ):
         """Loads a gro file into a distinctive topology with
 positions and velocities."""
         atoms = []
-        with open(gro_filename, 'r') as f:
+        with open(gro_filename, "r") as f:
             for i, line in enumerate(f):
                 if i == 0:
                     pass
@@ -240,19 +258,19 @@ positions and velocities."""
                     natoms = int(line.strip())
                 elif i < natoms + 2:
                     atom = {}
-                    atom['mol_nr'] = int(line[0:5])
-                    atom['mol_name'] = line[5:10].strip()
-                    atom['name'] = line[10:15].strip()
-                    atom['pos'] = np.array([float(line[20:28]),
-                                            float(line[28:36]),
-                                            float(line[36:44])])
+                    atom["mol_nr"] = int(line[0:5])
+                    atom["mol_name"] = line[5:10].strip()
+                    atom["name"] = line[10:15].strip()
+                    atom["pos"] = np.array(
+                        [float(line[20:28]), float(line[28:36]), float(line[36:44])]
+                    )
                     # try to read velocities if present in file
                     try:
-                        atom['vel'] = np.array([float(line[44:52]),
-                                                float(line[52:60]),
-                                                float(line[60:68])])
+                        atom["vel"] = np.array(
+                            [float(line[44:52]), float(line[52:60]), float(line[60:68])]
+                        )
                     except (IndexError, ValueError):
-                        atom['vel'] = None
+                        atom["vel"] = None
 
                     atoms.append(atom)
 
@@ -262,53 +280,59 @@ positions and velocities."""
         dt_atoms = []
 
         mol_nr_old = 1
-        mol_name_old = atoms[0]['mol_name']
+        mol_name_old = atoms[0]["mol_name"]
 
-        dt_mol = {'atoms': []}
-        dt_moltype = {'mols': []}
+        dt_mol = {"atoms": []}
+        dt_moltype = {"mols": []}
 
         # go throug atoms
         for atom_nr, atom in enumerate(atoms):
             # add new atom to dt_atoms
-            dt_atom = {'name': atom['name'],
-                       'pos': atom['pos'],
-                       'vel': atom['vel'],
-                       'mass': atom_mass_dict[atom['name']]}
+            dt_atom = {
+                "name": atom["name"],
+                "pos": atom["pos"],
+                "vel": atom["vel"],
+                "mass": atom_mass_dict[atom["name"]],
+            }
             dt_atoms.append(dt_atom)
 
             # if last atom
             if atom_nr == natoms - 1:
-                dt_mol = {'atoms': dt_atoms}
+                dt_mol = {"atoms": dt_atoms}
                 dt_mols.append(dt_mol)
-                mol_name = atom['mol_name']
-                dt_moltype = {'name': mol_name,
-                              'mols': dt_mols,
-                              'rot_treat': rot_treat_dict[mol_name],
-                              'abc_indicators': abc_indicators_dict[mol_name],
-                              'sigma': sigma_dict[mol_name]}
+                mol_name = atom["mol_name"]
+                dt_moltype = {
+                    "name": mol_name,
+                    "mols": dt_mols,
+                    "rot_treat": rot_treat_dict[mol_name],
+                    "abc_indicators": abc_indicators_dict[mol_name],
+                    "sigma": sigma_dict[mol_name],
+                }
                 dt_moltypes.append(dt_moltype)
                 break
 
             next_atom = atoms[atom_nr + 1]
 
             # if at end of molecule
-            if next_atom['mol_nr'] != mol_nr_old:
-                dt_mol = {'atoms': dt_atoms}
+            if next_atom["mol_nr"] != mol_nr_old:
+                dt_mol = {"atoms": dt_atoms}
                 dt_mols.append(dt_mol)
                 dt_atoms = []
-                mol_nr_old = next_atom['mol_nr']
+                mol_nr_old = next_atom["mol_nr"]
 
             # if at end of moltype
-            if next_atom['mol_name'] != mol_name_old:
-                mol_name = atom['mol_name']
-                dt_moltype = {'name': mol_name,
-                              'mols': dt_mols,
-                              'rot_treat': rot_treat_dict[mol_name],
-                              'abc_indicators': abc_indicators_dict[mol_name],
-                              'sigma': sigma_dict[mol_name]}
+            if next_atom["mol_name"] != mol_name_old:
+                mol_name = atom["mol_name"]
+                dt_moltype = {
+                    "name": mol_name,
+                    "mols": dt_mols,
+                    "rot_treat": rot_treat_dict[mol_name],
+                    "abc_indicators": abc_indicators_dict[mol_name],
+                    "sigma": sigma_dict[mol_name],
+                }
                 dt_moltypes.append(dt_moltype)
                 dt_mols = []
-                mol_name_old = next_atom['mol_name']
+                mol_name_old = next_atom["mol_name"]
 
         self.distinctive_top = dt_moltypes
 
@@ -320,7 +344,7 @@ positions and velocities."""
 
     def save_gro_file(self, gro_filename, box, write_empty=False):
         """Saves a distinctive topology in a gro file."""
-        with open(gro_filename, 'w') as f:
+        with open(gro_filename, "w") as f:
             f.write("exported from SimTop\n")
             f.write(f"{self.natoms()}\n")
             for moltype in self.moltypes():
@@ -338,9 +362,11 @@ positions and velocities."""
                             if write_empty:
                                 x = y = z = np.nan
                             else:
-                                raise KeyError("""There are no positions in this
+                                raise KeyError(
+                                    """There are no positions in this
                                                topology. Not possible to write
-                                               gro file!""")
+                                               gro file!"""
+                                )
                         f.write(f"{x:> 8.3f}")
                         f.write(f"{y:> 8.3f}")
                         f.write(f"{z:> 8.3f}")
@@ -353,27 +379,32 @@ positions and velocities."""
                         f.write("\n")
             f.write(f"{box[0]} {box[1]} {box[2]}\n")
 
-    def save_doscalc_parameters_file(self, nsamples, nblocks, nblocksteps,
-                                     parameters_file="params.txt"):
+    def save_doscalc_parameters_file(
+        self, nsamples, nblocks, nblocksteps, parameters_file="params.txt"
+    ):
         """
         Generate a parameters file for my dos-calc code.
         """
 
-        with open(parameters_file, 'w') as f:
+        with open(parameters_file, "w") as f:
 
             f.write(str(nsamples) + "\n")
             f.write(str(nblocks) + "\n")
             f.write(str(nblocksteps) + "\n")
             f.write(str(self.nmoltypes()) + "\n")
             for moltype in self.moltypes():
-                moltype_atommasses = (atomtype['mass'] for atomtype in moltype.atomtypes())
-                moltype_string = f"{moltype.nmols} "\
-                                 f"{moltype.natomtypes} "\
-                                 f"{' '.join(map(str, moltype_atommasses))} "\
-                                 f"{moltype.rot_treat} "\
-                                 f"{' '.join(map(str, moltype.abc_indicators))}"
+                moltype_atommasses = (
+                    atomtype["mass"] for atomtype in moltype.atomtypes()
+                )
+                moltype_string = (
+                    f"{moltype.nmols} "
+                    f"{moltype.natomtypes} "
+                    f"{' '.join(map(str, moltype_atommasses))} "
+                    f"{moltype.rot_treat} "
+                    f"{' '.join(map(str, moltype.abc_indicators))}"
+                )
 
-                f.write(moltype_string + '\n')
+                f.write(moltype_string + "\n")
 
 
 def com_atomlist(atomlist):
@@ -401,11 +432,15 @@ def decompose_velocities_of_molecule(molecule):
     n_atoms = molecule.natoms
     mass = molecule.mass
 
-    return decompose_velocities_of_molecule_optimized(positions, velocities, m_atommasses, n_atoms, mass)
+    return decompose_velocities_of_molecule_optimized(
+        positions, velocities, m_atommasses, n_atoms, mass
+    )
 
 
-#@jit
-def decompose_velocities_of_molecule_optimized(positions, velocities, m_atommasses, n_atoms, mass):
+# @jit
+def decompose_velocities_of_molecule_optimized(
+    positions, velocities, m_atommasses, n_atoms, mass
+):
     if n_atoms == 1:
         return velocities, np.zeros((1, 3)), np.zeros((1, 3))
 
@@ -415,15 +450,22 @@ def decompose_velocities_of_molecule_optimized(positions, velocities, m_atommass
     positions_rel = positions - center_of_mass
 
     if np.any(positions_rel >= 1):
-        raise Exception("""There is either a large molecule (~1 nm) or the molecule positions are split by periodic boundaries.
-You can turn of this check with pbc_check=False""")
+        raise Exception(
+            """
+            There is either a large molecule (~1 nm) or the molecule positions are
+            split by periodic boundaries. You can turn of this check with
+            pbc_check=False
+            """
+        )
 
     angular_momentum = m_atommasses @ np.cross(positions_rel, velocities)
 
     moi_tensor = np.zeros((3, 3))
     for i in range(len(positions_rel)):
-        moi_tensor += m_atommasses[i] * ((positions_rel[i] @ positions_rel[i]) * np.identity(3)
-                                         - np.tensordot(positions_rel[i], positions_rel[i], axes=0))
+        moi_tensor += m_atommasses[i] * (
+            (positions_rel[i] @ positions_rel[i]) * np.identity(3)
+            - np.tensordot(positions_rel[i], positions_rel[i], axes=0)
+        )
 
     if n_atoms == 2:
         raise Exception("linear molecules not implemented")
@@ -434,7 +476,6 @@ You can turn of this check with pbc_check=False""")
     velocities_vib = velocities - velocities_trn - velocities_rot
 
     return velocities_trn, velocities_rot, velocities_vib
-
 
 
 def calc_kinetic_energy_distribution(topology, kT):
@@ -448,9 +489,9 @@ def calc_kinetic_energy_distribution(topology, kT):
         vel_trn, vel_rot, vel_vib = decompose_velocities_of_molecule(mol)
         m_atommasses = np.array([atom.mass for atom in mol.atoms()])
 
-        e_kin_trn += np.sum(m_atommasses @ vel_trn**2)
-        e_kin_rot += np.sum(m_atommasses @ vel_rot**2)
-        e_kin_vib += np.sum(m_atommasses @ vel_vib**2)
+        e_kin_trn += np.sum(m_atommasses @ vel_trn ** 2)
+        e_kin_rot += np.sum(m_atommasses @ vel_rot ** 2)
+        e_kin_vib += np.sum(m_atommasses @ vel_vib ** 2)
 
     e_kin_trn /= topology.nmols() * kT
     e_kin_rot /= topology.nmols() * kT
@@ -465,7 +506,9 @@ def show_kinetic_energy_distribution(topology, kT):
 
     e_kin_trn, e_kin_rot, e_kin_vib = calc_kinetic_energy_distribution(topology, kT)
 
-    print(f"""kinetic energy distribution:
+    print(
+        f"""kinetic energy distribution:
 trn: {e_kin_trn:7.4f}
 rot: {e_kin_rot:7.4f}
-vib: {e_kin_vib:7.4f}""")
+vib: {e_kin_vib:7.4f}"""
+    )

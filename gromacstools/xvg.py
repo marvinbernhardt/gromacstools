@@ -90,7 +90,7 @@ def load(filename):
     # header post-processing
     try:
         header['legend'][0] = header['xlabel']
-    except:
+    except Exception:
         pass
 
     pure_data.seek(0)
@@ -98,7 +98,7 @@ def load(filename):
 
     try:
         dataFrame.columns = header['legend']
-    except:
+    except Exception:
         pass
 
     return dataFrame, header
