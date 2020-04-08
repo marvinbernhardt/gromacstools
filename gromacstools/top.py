@@ -512,3 +512,26 @@ trn: {e_kin_trn:7.4f}
 rot: {e_kin_rot:7.4f}
 vib: {e_kin_vib:7.4f}"""
     )
+
+
+def generate_index_file(top, filepath):
+    """write a simple index.ndx file with all atomtypes"""
+    # acuumulate atomtypes
+    atomtypes = []
+    for atom in top.atoms():
+        if atom.name not in (att['name'] for att in atomtypes):
+            atomtypes += [{'name': atom.name, 'indices': []}]
+        for att in atomtypes:
+            if att['name'] == atom.name:
+                att['indices'] += [atom.index_in_top + 1]
+    # add System to atomtypes
+    atomtypes += [{'name': 'System', 'indices': range(1, len(top.atoms())+1)}]
+    # write atomtypes
+    with open(filepath, 'w') as f:
+        for att in atomtypes:
+            f.write('[ ' + att['name'] + ' ]')
+            for i, index in enumerate(att['indices']):
+                if i % 10 == 0:
+                    f.write('\n')
+                f.write('  ' + str(index))
+            f.write('\n')
