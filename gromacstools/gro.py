@@ -56,7 +56,8 @@ def mix_water(gro_file, nmols):
             f.write(line)
 
 
-def read_moltypes(gro_file, atom_mass_dict, abc_indicators_dict, sigma_dict):
+def read_moltypes(gro_file, atom_mass_dict=None, abc_indicators_dict=None,
+                  sigma_dict=None):
     """read gro file into moltypes"""
     # read atoms from file
     atoms = []
@@ -86,8 +87,9 @@ def read_moltypes(gro_file, atom_mass_dict, abc_indicators_dict, sigma_dict):
                 atoms.append(atom)
 
     # add atoms mass from dict
-    for atom in atoms:
-        atom["mass"] = atom_mass_dict[atom["name"]]
+    if atom_mass_dict is not None:
+        for atom in atoms:
+            atom["mass"] = atom_mass_dict[atom["name"]]
 
     # create mols list
     mols = []
@@ -109,11 +111,15 @@ def read_moltypes(gro_file, atom_mass_dict, abc_indicators_dict, sigma_dict):
         # check for new moltype
         mol_name = mol[0]["mol_name"]
         if mol_name_old != mol_name:
+            abc_indicators = (abc_indicators_dict[mol_name]
+                              if abc_indicators_dict is not None else None)
+            sigma = (sigma_dict[mol_name]
+                     if sigma_dict is not None else None)
             moltype = {
                 "name": mol_name,
                 "mols": [],
-                "abc_indicators": abc_indicators_dict[mol_name],
-                "sigma": sigma_dict[mol_name],
+                "abc_indicators": abc_indicators,
+                "sigma": sigma,
             }
             moltypes.append(moltype)
             mol_name_old = mol_name
