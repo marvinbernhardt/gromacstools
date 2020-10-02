@@ -89,6 +89,8 @@ def pull_files(filelist, remote_host, remote_dir, exclude=""):
 
 def push_files(filelist, remote_host, remote_dir, exclude="", relative=True):
     """Copies a list of files on a remote host into a specified directory."""
+    if type(filelist) == str:
+        TypeError('pass me a list or tuple')
     filelist_string = " ".join(filelist)
     exclude_string = ""
     relative_string = ""
