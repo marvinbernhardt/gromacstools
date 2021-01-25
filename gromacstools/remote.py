@@ -176,23 +176,24 @@ echo -n "finished $SLURM_JOB_ID at "; date
         return None
 
 
-def run_slurm_script(script, remote_host, remote_dir, dry_run=False):
+def run_slurm_script(script, remote_host, remote_dir, dry_run=False,
+                     sbatch_name='sbatch.sh'):
     """Runs a slurm script on a remote host."""
 
     # write and copy to remote
-    with open("sbatch.sh", "w") as f:
+    with open(sbatch_name, "w") as f:
         f.write(script)
-    run_bash("rsync -az sbatch.sh {0}:{1}/".format(remote_host, remote_dir))
+    run_bash("rsync -az {0} {1}:{2}/".format(sbatch_name, remote_host, remote_dir))
 
-    # run sbatch on remote and remote jobid
+    # run sbatch_name on remote and remote jobid
     if not dry_run:
         proc = subprocess.Popen(
             [
                 "ssh",
                 remote_host,
                 *shlex.split(
-                    '"source /etc/profile; cd {0}; sbatch --parsable sbatch.sh"'.format(
-                        remote_dir
+                    '"source /etc/profile; cd {0}; sbatch --parsable {1}"'.format(
+                        remote_dir, sbatch_name
                     )
                 ),
             ],
