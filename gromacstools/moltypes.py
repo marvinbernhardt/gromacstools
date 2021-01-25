@@ -20,6 +20,6 @@ def count_atomname(moltypes, atomname):
                for mt in moltypes))
 
 
-def get_mol_mass(moltypes, moltype_index):
+def get_mol_mass(moltypes, moltype_index, single_mol=False):
     mt = moltypes[moltype_index]
-    return sum((at['mass'] for at in mt['atoms'])) * mt['nmols']
+    return sum((at['mass'] for at in mt['atoms'])) * (1 if single_mol else mt['nmols'])
