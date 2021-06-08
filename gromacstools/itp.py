@@ -29,6 +29,7 @@ def get_section_lines(filepath, section):
     """
     _reg_section = re.compile(r'\s*\[\s*([a-zA-Z0-9-_]+)\s*\]\s*')
     _reg_comment = re.compile(r'\s*;')
+    _reg_statement = re.compile(r'\s*#')
     _reg_empty = re.compile(r'\s*' + '\n')
 
     section_lines = []
@@ -39,7 +40,8 @@ def get_section_lines(filepath, section):
         for line in lines:
 
             # if comment or empty
-            if _reg_comment.match(line) or _reg_empty.match(line):
+            if (_reg_comment.match(line) or _reg_empty.match(line)
+                    or _reg_statement.match(line)):
                 continue
 
             # if section header
