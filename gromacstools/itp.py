@@ -1,6 +1,7 @@
 import re
 from itertools import combinations
 from itertools import permutations
+import networkx as nx
 
 """
 Note:
@@ -247,15 +248,11 @@ def pairs_from_bonds(bonds, distance=3):
 
     """
     pairs = set()
-    if distance == 3:
-        # iterate over all combinations of two bonds
-        for dihedral in dihedrals_from_bonds(bonds):
-            dihedral_iter = iter(dihedral)
-            pair = frozenset({next(dihedral_iter)[1], next(dihedral_iter)[1]})
+    G = nx.Graph(bonds)
+    for atom1 in G.nodes:
+        for atom2 in nx.descendants_at_distance(G, atom1, distance):
+            pair = frozenset({atom1, atom2})
             pairs.add(pair)
-    else:
-        raise Exception(f"Pair list for distance of {distance} not implemented yet")
-
     return pairs
 
 
