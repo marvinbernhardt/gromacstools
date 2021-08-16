@@ -171,6 +171,8 @@ echo -n "finished $SLURM_JOB_ID at "; date
         if stderr_string.isdigit():
             return stderr_string
         else:
+            print(stdout.decode().strip())
+            print(stderr.decode().strip())
             return None
     else:
         return None
@@ -206,6 +208,8 @@ def run_slurm_script(script, remote_host, remote_dir, dry_run=False,
         if jobid.isdigit():
             return jobid
         else:
+            print(stdout.decode().strip())
+            print(stderr.decode().strip())
             return None
     else:
         return None
@@ -272,6 +276,8 @@ echo -n "finished $SLURM_JOB_ID at "; date
         if stderr_string.isdigit():
             return stderr_string
         else:
+            print(stdout.decode().strip())
+            print(stderr.decode().strip())
             return None
     else:
         return None
@@ -340,6 +346,8 @@ echo -n "finished $PBS_JOBID at "; date
         if jobid.isdigit():
             return jobid
         else:
+            print(stdout.decode().strip())
+            print(stderr.decode().strip())
             return None
     else:
         return None
