@@ -2,7 +2,7 @@ import subprocess
 import os
 
 
-def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
+def run_bash(command, stdin=None, print_stdout=False, print_stderr=False, print_on_error=True):
     """
     Runs a command in a sh (not bash :/) shell and optionally prints output.
 
@@ -28,14 +28,15 @@ def run_bash(command, stdin=None, print_stdout=False, print_stderr=False):
             input=stdin,
         )
     except subprocess.CalledProcessError as e:
-        print("#=#=# The command #=#=#")
-        print(e.cmd)
-        print("#=#=# returned #=#=#")
-        print(e.returncode)
-        print("#=#=# stdout is #=#=#")
-        print(e.stdout)
-        print("#=#=# stderr is #=#=#")
-        print(e.stderr)
+        if print_on_error:
+            print("#=#=# The command #=#=#")
+            print(e.cmd)
+            print("#=#=# returned #=#=#")
+            print(e.returncode)
+            print("#=#=# stdout is #=#=#")
+            print(e.stdout)
+            print("#=#=# stderr is #=#=#")
+            print(e.stderr)
         raise
 
     # print
