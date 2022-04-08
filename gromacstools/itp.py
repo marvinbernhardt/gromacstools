@@ -28,21 +28,24 @@ def get_section_lines(filepath, section):
         list of lines
 
     """
-    _reg_section = re.compile(r'\s*\[\s*([a-zA-Z0-9-_]+)\s*\]\s*')
-    _reg_comment = re.compile(r'\s*;')
-    _reg_statement = re.compile(r'\s*#')
-    _reg_empty = re.compile(r'\s*' + '\n')
+    _reg_section = re.compile(r"\s*\[\s*([a-zA-Z0-9-_]+)\s*\]\s*")
+    _reg_comment = re.compile(r"\s*;")
+    _reg_statement = re.compile(r"\s*#")
+    _reg_empty = re.compile(r"\s*" + "\n")
 
     section_lines = []
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         lines = f.readlines()
 
         cur_section = None
         for line in lines:
 
             # if comment or empty
-            if (_reg_comment.match(line) or _reg_empty.match(line)
-                    or _reg_statement.match(line)):
+            if (
+                _reg_comment.match(line)
+                or _reg_empty.match(line)
+                or _reg_statement.match(line)
+            ):
                 continue
 
             # if section header
@@ -71,15 +74,15 @@ def get_bonds(filepath):
     bonds : set
 
     """
-    _reg_bond = re.compile(r'\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)')
+    _reg_bond = re.compile(r"\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)")
 
-    bonds_lines = get_section_lines(filepath, 'bonds')
+    bonds_lines = get_section_lines(filepath, "bonds")
 
     bonds = set()
     for line in bonds_lines:
         match_bond = _reg_bond.match(line)
         if match_bond is None:
-            raise Exception('unable to parse line into bond:', line)
+            raise Exception("unable to parse line into bond:", line)
         ai, aj, func = map(int, match_bond.group(1, 2, 3))
         bond = frozenset({ai, aj})
         bonds.add(bond)
@@ -100,15 +103,15 @@ def get_pairs(filepath):
     pairs : set
 
     """
-    _reg_pair = re.compile(r'\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)')
+    _reg_pair = re.compile(r"\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)")
 
-    pairs_lines = get_section_lines(filepath, 'pairs')
+    pairs_lines = get_section_lines(filepath, "pairs")
 
     pairs = set()
     for line in pairs_lines:
         match_pair = _reg_pair.match(line)
         if match_pair is None:
-            raise Exception('unable to parse line into pair:', line)
+            raise Exception("unable to parse line into pair:", line)
         ai, aj, func = map(int, match_pair.group(1, 2, 3))
         pair = frozenset({ai, aj})
         pairs.add(pair)
@@ -129,15 +132,15 @@ def get_angles(filepath):
     angles : set
 
     """
-    _reg_angle = re.compile(r'\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)')
+    _reg_angle = re.compile(r"\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)")
 
-    angles_lines = get_section_lines(filepath, 'angles')
+    angles_lines = get_section_lines(filepath, "angles")
 
     angles = set()
     for line in angles_lines:
         match_angle = _reg_angle.match(line)
         if match_angle is None:
-            raise Exception('unable to parse line into angle:', line)
+            raise Exception("unable to parse line into angle:", line)
         # angle is an tuple of (middle_atom, set of {outer_atom1, outer_atom2})
         ai, aj, ak, func = map(int, match_angle.group(1, 2, 3, 4))
         angle = (aj, frozenset({ai, ak}))
@@ -162,16 +165,17 @@ def get_dihedrals(filepath, ignore_funcs=(2, 4)):
     dihedrals : set
 
     """
-    _reg_dihedral = re.compile(r'\s*([0-9]+)\s*([0-9]+)'
-                               + r'\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)')
+    _reg_dihedral = re.compile(
+        r"\s*([0-9]+)\s*([0-9]+)" + r"\s*([0-9]+)\s*([0-9]+)\s*([0-9]+)"
+    )
 
-    dihedrals_lines = get_section_lines(filepath, 'dihedrals')
+    dihedrals_lines = get_section_lines(filepath, "dihedrals")
 
     dihedrals = set()
     for line in dihedrals_lines:
         match_dihedral = _reg_dihedral.match(line)
         if match_dihedral is None:
-            raise Exception('unable to parse line into dihedral:', line)
+            raise Exception("unable to parse line into dihedral:", line)
         ai, aj, ak, al, func = map(int, match_dihedral.group(1, 2, 3, 4, 5))
         # exclude type 2 and 4 which are improper dihedrals
         if func in ignore_funcs:
@@ -309,3 +313,40 @@ def angles_lines_from_angles(angles, func=1):
 
     angles_lines = "\n".join(angles_lines)
     return angles_lines
+
+
+def get_atomtypes_atoms(filepath):
+    """Gets atomtypes, atoms with mass and charge.
+
+    Assumes there is only one [atoms] section.
+    Actual atomtype is ignored, atomtypes are by element."""
+    # get atomtypes
+    atomtypes_dist = {}  # distinguishing ff parameters
+    atomtypes = {}
+    lines = get_section_lines(filepath, "atomtypes")
+    for line in lines:
+        atomtype, atom, mass, _, _, _, _ = line.split()
+        element = atom[0]  # :/ could have more letters
+        mass = float(mass)
+        if element in atomtypes.keys():
+            assert (
+                atomtypes[element]["mass"] == mass
+            ), "Non-matching mass for same element"
+        else:
+            atomtypes[element] = {"mass": mass}
+        atomtypes_dist[atomtype] = {"element": element}
+
+    # get atoms
+    atoms = {}
+    lines = get_section_lines(filepath, "atoms")
+    for ln, line in enumerate(lines):
+        nr, atomtype, _, _, atomname, _, charge, mass = line.split()
+        assert int(nr) == ln + 1, "atom nr not matching line position"
+        charge = float(charge)
+        mass = float(mass)
+        element = atomtypes_dist[atomtype]["element"]
+        assert (
+            atomtypes[element]["mass"] == mass
+        ), "mass not matching in [atomtypes], [atoms]"
+        atoms[atomname] = {"type": element, "charge": charge}
+    return atomtypes, atoms
